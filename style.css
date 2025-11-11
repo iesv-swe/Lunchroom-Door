@@ -8,7 +8,6 @@ body {
     padding: 20px;
     height: 100vh;
     box-sizing: border-box;
-    /* REMOVED 'align-items: center' to let content sit at the top */
     display: flex;
     justify-content: center;
     text-align: center;
@@ -23,24 +22,23 @@ body {
 /* --- STATUS STYLING (BIGGER) --- */
 
 #status-container {
-    padding-top: 40px; /* Add some space at the top */
+    padding-top: 40px;
 }
 
 #lounge-status {
-    font-size: 6em; /* Increased from 4em */
+    font-size: 6em;
     font-weight: bold;
     margin: 0;
     text-transform: uppercase;
 }
 
 #lounge-timer {
-    font-size: 3.5em; /* Increased from 2.5em */
+    font-size: 3.5em;
     /* SCHOOL COLOR: IES Logo Grey */
     color: #9a9b9d;
     margin-top: 10px;
 }
 
-/* Dynamic status colors (Keeping Green/Red for clear status) */
 #lounge-status.open {
     color: #4CAF50; /* Green */
 }
@@ -50,7 +48,7 @@ body {
 }
 
 
-/* --- MENU STYLING (SMALLER) --- */
+/* --- MENU STYLING (3+2 LAYOUT) --- */
 
 hr {
     /* SCHOOL COLOR: IES Logo Grey */
@@ -59,14 +57,15 @@ hr {
 }
 
 #menu-container h1 {
-    font-size: 2em; /* Decreased from 2.5em */
-    color: #fff; /* White title */
+    font-size: 2em;
+    color: #fff;
 }
 
 #menu-grid {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
+    /* This centers the rows */
+    justify-content: center; 
     gap: 15px;
 }
 
@@ -79,16 +78,19 @@ hr {
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* 5-column layout for kiosk screen */
+/* 3+2 column layout for kiosk screen */
 @media (min-width: 1000px) {
     .menu-day {
-        flex-basis: calc(20% - 12px);
+        /* This creates a 3-column-wide box */
+        flex-basis: 31%;
+        /* This stops the 2-item row from stretching */
+        flex-grow: 0;
     }
 }
 
 
 .menu-day h3 {
-    font-size: 1.3em; /* Decreased from 1.5em */
+    font-size: 1.3em;
     /* SCHOOL COLOR: IES Logo Blue */
     color: #00a0df;
     margin-top: 0;
@@ -96,7 +98,7 @@ hr {
 
 .menu-content {
     font-family: inherit;
-    font-size: 0.9em; /* Decreased from 0.95em */
+    font-size: 0.9em;
     /* SCHOOL COLOR: Light Grey */
     color: #dbdad8;
     text-align: left;
@@ -108,6 +110,5 @@ hr {
 .menu-day.today {
     /* SCHOOL COLOR: IES Logo Blue */
     border: 3px solid #00a0df;
-    /* A transparent highlight of the logo blue */
     background-color: rgba(0, 160, 223, 0.1);
 }
