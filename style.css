@@ -14,7 +14,7 @@ body {
 
 .container {
     width: 95%;
-    max-width: 1200px;
+    max-width: 1400px; /* Increased max-width for 5 columns */
     margin: 0 auto;
 }
 
@@ -26,7 +26,7 @@ body {
 
 #menu-grid {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
     justify-content: space-between;
     gap: 15px;
 }
@@ -35,21 +35,15 @@ body {
     background-color: #444;
     border-radius: 8px;
     padding: 15px;
-    flex-basis: 100%; /* Full width on small screens */
+    flex-basis: 100%; /* Default: 1 column (for small screens) */
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* On medium screens and up, show 2-3 columns */
-@media (min-width: 768px) {
-    .menu-day {
-        flex-basis: 48%; /* Two columns */
-    }
-}
-
 /* On large screens, show 5 columns */
-@media (min-width: 1200px) {
+@media (min-width: 1000px) {
     .menu-day {
-        flex-basis: 18%; /* Five columns */
+        /* 20% width minus the gap */
+        flex-basis: calc(20% - 12px);
     }
 }
 
