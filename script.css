@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
             parseMenu(text, currentWeek, currentDayIndex);
         } catch (error) {
             console.error('Error loading menu:', error);
-            document.getElementById('menu-grid').innerHTML = '<p style="color:red;">Kunde inte ladda menyn. Kontrollera att filen menu.txt finns.</p>';
+            document.getElementById('menu-grid').innerHTML = '<p style="color:red; font-size: 1.5em;">Kunde inte ladda menyn. Kontrollera att filen menu.txt finns och har rätt namn.</p>';
         }
     }
 
