@@ -22,7 +22,7 @@ body {
 /* --- STATUS STYLING (BIGGER) --- */
 
 #status-container {
-    padding-top: 40px;
+    /* 'padding-top: 40px;' REMOVED from here to shift content up */
 }
 
 #lounge-status {
