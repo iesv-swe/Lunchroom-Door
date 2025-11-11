@@ -90,7 +90,7 @@ hr {
 
 
 .menu-day h3 {
-    font-size: 1.4em; /* INCREASED from 1.3em */
+    font-size: 1.6em; /* INCREASED from 1.4em */
     /* SCHOOL COLOR: IES Logo Blue */
     color: #00a0df;
     margin-top: 0;
@@ -98,7 +98,7 @@ hr {
 
 .menu-content {
     font-family: inherit;
-    font-size: 1.1em; /* INCREASED from 0.9em */
+    font-size: 1.2em; /* INCREASED from 1.1em */
     /* SCHOOL COLOR: Light Grey */
     color: #dbdad8;
     text-align: left;
