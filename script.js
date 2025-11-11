@@ -1,5 +1,39 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- PART 1: LOUNGE STATUS & COUNTDOWN ---
+    
+    // --- PART 1: WAKE LOCK (Keeps Screen On) ---
+    let wakeLock = null;
+
+    const requestWakeLock = async () => {
+        if ('wakeLock' in navigator) {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log('Wake Lock is active: Screen will not sleep.');
+                
+                // Re-acquire lock if visibility changes
+                wakeLock.addEventListener('release', () => {
+                    console.log('Wake Lock was released, re-acquiring...');
+                    requestWakeLock();
+                });
+
+            } catch (err) {
+                console.error(`Wake Lock failed: ${err.name}, ${err.message}`);
+            }
+        } else {
+            console.warn('Wake Lock API is not supported on this browser.');
+        }
+    };
+
+    // Request the lock when the page loads
+    requestWakeLock();
+
+    // Re-request the lock when the tab becomes visible again
+    document.addEventListener('visibilitychange', () => {
+        if (wakeLock !== null && document.visibilityState === 'visible') {
+            requestWakeLock();
+        }
+    });
+
+    // --- PART 2: LOUNGE STATUS & COUNTDOWN ---
 
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
@@ -103,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- PART 2: MENU LOADER ---
+    // --- PART 3: MENU LOADER ---
 
     // Function to get ISO week number
     function getWeekNumber(d) {
@@ -112,12 +146,19 @@ document.addEventListener('DOMContentLoaded', () => {
         var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
         var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
         return weekNo;
-    }
+}
 
     async function loadMenu() {
         const today = new Date();
-        const currentWeek = getWeekNumber(today);
+        // Manually set to Tuesday (Day 2) for testing
+        // const currentDayIndex = 2; 
         const currentDayIndex = today.getDay(); // 0=Sunday, 1=Monday...
+        
+        // This is a "hack" to get the week number.
+        // We set the date to Thursday (day 4) of this week to get the correct ISO week number.
+        const currentWeekDate = new Date(today.getTime());
+        currentWeekDate.setDate(today.getDate() + 4 - (today.getDay() || 7));
+        const currentWeek = getWeekNumber(currentWeekDate);
         
         document.getElementById('week-number').textContent = currentWeek;
 
@@ -178,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- PART 3: INITIALIZE AND UPDATE ---
+    // --- PART 4: INITIALIZE AND UPDATE ---
 
     // Load the menu once
     loadMenu();
