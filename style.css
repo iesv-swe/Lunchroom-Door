@@ -43,7 +43,6 @@ body {
 }
 
 /* On large screens, show 5 columns */
-/* THIS IS THE FIX: Clean code, no bad characters */
 @media (min-width: 1000px) {
     .menu-day {
         /* 20% width minus the gap */
