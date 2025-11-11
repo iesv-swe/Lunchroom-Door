@@ -8,9 +8,9 @@ body {
     padding: 20px;
     height: 100vh;
     box-sizing: border-box;
+    /* REMOVED 'align-items: center' to let content sit at the top */
     display: flex;
     justify-content: center;
-    align-items: center;
     text-align: center;
 }
 
@@ -20,9 +20,46 @@ body {
     margin: 0 auto;
 }
 
-/* Menu Styling */
+/* --- STATUS STYLING (BIGGER) --- */
+
+#status-container {
+    padding-top: 40px; /* Add some space at the top */
+}
+
+#lounge-status {
+    font-size: 6em; /* Increased from 4em */
+    font-weight: bold;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+#lounge-timer {
+    font-size: 3.5em; /* Increased from 2.5em */
+    /* SCHOOL COLOR: IES Logo Grey */
+    color: #9a9b9d;
+    margin-top: 10px;
+}
+
+/* Dynamic status colors (Keeping Green/Red for clear status) */
+#lounge-status.open {
+    color: #4CAF50; /* Green */
+}
+
+#lounge-status.closed {
+    color: #F44336; /* Red */
+}
+
+
+/* --- MENU STYLING (SMALLER) --- */
+
+hr {
+    /* SCHOOL COLOR: IES Logo Grey */
+    border: 1px solid #9a9b9d;
+    margin: 40px 0;
+}
+
 #menu-container h1 {
-    font-size: 2.5em;
+    font-size: 2em; /* Decreased from 2.5em */
     color: #fff; /* White title */
 }
 
@@ -42,30 +79,28 @@ body {
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* On large screens, show 5 columns */
+/* 5-column layout for kiosk screen */
 @media (min-width: 1000px) {
     .menu-day {
-        /* 20% width minus the gap */
         flex-basis: calc(20% - 12px);
     }
 }
 
 
 .menu-day h3 {
-    font-size: 1.5em;
+    font-size: 1.3em; /* Decreased from 1.5em */
     /* SCHOOL COLOR: IES Logo Blue */
     color: #00a0df;
     margin-top: 0;
 }
 
-/* This preserves the line breaks from your menu.txt */
 .menu-content {
     font-family: inherit;
-    font-size: 0.95em;
+    font-size: 0.9em; /* Decreased from 0.95em */
     /* SCHOOL COLOR: Light Grey */
     color: #dbdad8;
     text-align: left;
-    white-space: pre-wrap; /* This is important! */
+    white-space: pre-wrap;
     margin: 0;
 }
 
@@ -75,34 +110,4 @@ body {
     border: 3px solid #00a0df;
     /* A transparent highlight of the logo blue */
     background-color: rgba(0, 160, 223, 0.1);
-}
-
-hr {
-    /* SCHOOL COLOR: IES Logo Grey */
-    border: 1px solid #9a9b9d;
-    margin: 40px 0;
-}
-
-/* Lounge Status Styling */
-#lounge-status {
-    font-size: 4em;
-    font-weight: bold;
-    margin: 0;
-    text-transform: uppercase;
-}
-
-#lounge-timer {
-    font-size: 2.5em;
-    /* SCHOOL COLOR: IES Logo Grey */
-    color: #9a9b9d;
-    margin-top: 10px;
-}
-
-/* Dynamic status colors (Keeping Green/Red for clear status) */
-#lounge-status.open {
-    color: #4CAF50; /* Green */
-}
-
-#lounge-status.closed {
-    color: #F44336; /* Red */
 }
