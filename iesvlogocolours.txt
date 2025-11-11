@@ -1,0 +1,41 @@
+IES Logo Blue
+RGB: 0/159/221
+CMYK: 82/15/00/00
+PMS: 299 C
+HEX: 00a0df
+
+IES Logo Grey
+RGB: 154/155/160
+CMYK: 46/36/33/01
+PMS: COOL GREY 7 C
+HEX: 9a9b9d
+
+Navy Blue
+RGB: 16/45/105
+CMYK: 100/80/00/40
+PMS: 280
+HEX: 102d69
+
+Light Blue
+RGB: 188/228/250
+CMYK: 30/00/00/00
+HEX: bce4fa
+
+Light Yellow
+RGB: 255/247/178
+CMYK: 00/00/40/00
+HEX: fff7b2
+
+Light Green
+RGB: 217/230/177
+CMYK: 20/00/40/00
+HEX: d9e6b1
+
+Light Grey
+RGB: 219/218/216
+CMYK: 17/12/15/00
+HEX: dbdad8
+
+Black
+
+White
