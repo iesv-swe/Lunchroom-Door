@@ -1,13 +1,37 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- (ALL WAKE LOCK CODE REMOVED) ---
+    // --- PART 1: WAKE LOCK (Yesterday's version) ---
+    let wakeLock = null;
 
-    // --- PART 1: LOUNGE STATUS & COUNTDOWN ---
+    const requestWakeLock = async () => {
+        if ('wakeLock' in navigator) {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log('Wake Lock is active: Screen will not sleep.');
+            } catch (err) {
+                console.error(`Wake Lock failed: ${err.name}, ${err.message}`);
+            }
+        } else {
+            console.warn('Wake Lock API is not supported on this browser.');
+        }
+    };
+
+    // Request the lock when the page loads
+    requestWakeLock();
+
+    // Re-request the lock when the tab becomes visible again
+    document.addEventListener('visibilitychange', () => {
+        if (wakeLock !== null && document.visibilityState === 'visible') {
+            requestWakeLock();
+        }
+    });
+
+    // --- PART 2: LOUNGE STATUS & COUNTDOWN ---
 
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
 
-    // THIS IS THE SCHEDULE
+    // THIS IS THE CORRECTED SCHEDULE
     const schedule = {
         0: [], // Sunday
         1: [ [11, 0], [13, 45] ], // Monday: 11:00-13:45
@@ -18,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         6: []  // Saturday
     };
 
+    // (The rest of the file is identical to the one that worked)
     function updateLoungeStatus() {
         const now = new Date();
         const currentDay = now.getDay();
@@ -135,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('#menu-wednesday .menu-content').textContent = menuData.WEDNESDAY || 'Meny saknas';
         document.querySelector('#menu-thursday .menu-content').textContent = menuData.THURSDAY || 'Meny saknas';
         document.querySelector('#menu-friday .menu-content').textContent = menuData.FRIDAY || 'Meny saknas';
-        if (currentDayIndex >= 1 && currentDayIndex <= 5) {
+        if (currentDayIndex >= 1 && currentDay_index <= 5) {
             const todayKey = days[currentDayIndex].toLowerCase();
             const todayElement = document.getElementById(`menu-${todayKey}`);
             if (todayElement) {
