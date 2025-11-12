@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- PART 1: WAKE LOCK (Keeps Screen On) ---
+    // We will pre-grant permission for this in the Admin Console
     let wakeLock = null;
 
     const requestWakeLock = async () => {
@@ -10,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Wake Lock is active: Screen will not sleep.');
                 
                 wakeLock.addEventListener('release', () => {
-                    // This event fires when the lock is released, e.g., by tab change
                     console.log('Wake Lock was released.');
                 });
 
@@ -22,13 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Request the lock when the page loads
-    requestWakeLock();
-
-    // Re-request the lock when the tab becomes visible again (as visibility change releases the lock)
+    requestWakeLock(); // Request on load
     document.addEventListener('visibilitychange', () => {
         if (wakeLock !== null && document.visibilityState === 'visible') {
-            requestWakeLock();
+            requestWakeLock(); // Re-request when tab becomes visible
         }
     });
 
@@ -37,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
 
-    // THIS IS THE SCHEDULE - PLEASE DOUBLE-CHECK IT
+    // THIS IS THE SCHEDULE
     const schedule = {
         0: [], // Sunday
         1: [ [11, 0], [13, 45] ], // Monday: 11:00-13:45
@@ -48,22 +45,21 @@ document.addEventListener('DOMContentLoaded', () => {
         6: []  // Saturday
     };
 
+    // (All the rest of the timer and menu logic is below)
+    // ... (The rest of the file is identical to the one you just had) ...
+
     function updateLoungeStatus() {
         const now = new Date();
         const currentDay = now.getDay();
         const currentHours = now.getHours();
         const currentMinutes = now.getMinutes();
         const currentTimeInMinutes = currentHours * 60 + currentMinutes;
-
         const daySchedule = schedule[currentDay];
         let isOpen = false;
-        let nextEventTime = null; // Time of next open or close
-
-        // Check if currently open
+        let nextEventTime = null;
         for (let i = 0; i < daySchedule.length; i += 2) {
             const openTime = daySchedule[i][0] * 60 + daySchedule[i][1];
             const closeTime = daySchedule[i + 1][0] * 60 + daySchedule[i + 1][1];
-
             if (currentTimeInMinutes >= openTime && currentTimeInMinutes < closeTime) {
                 isOpen = true;
                 nextEventTime = new Date(now);
@@ -71,8 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             }
         }
-
-        // Find next event if closed
         if (!isOpen) {
             for (let i = 0; i < daySchedule.length; i += 2) {
                 const openTime = daySchedule[i][0] * 60 + daySchedule[i][1];
@@ -83,8 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-
-        // If no more events today, find the next open day
         if (nextEventTime === null) {
             let nextDay = (currentDay + 1) % 7;
             let daysToAdd = 1;
@@ -92,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 nextDay = (nextDay + 1) % 7;
                 daysToAdd++;
             }
-
             if (daysToAdd <= 7 && schedule[nextDay].length > 0) {
                 const nextOpenTime = schedule[nextDay][0];
                 nextEventTime = new Date(now);
@@ -100,8 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 nextEventTime.setHours(nextOpenTime[0], nextOpenTime[1], 0, 0);
             }
         }
-
-        // Update DOM
         if (isOpen) {
             statusElement.textContent = 'The Lounge is OPEN';
             statusElement.className = 'open';
@@ -116,80 +105,53 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
     function formatCountdown(targetTime) {
         const now = new Date();
         const diff = targetTime.getTime() - now.getTime();
-        
         let seconds = Math.max(0, Math.floor(diff / 1000));
         let minutes = Math.floor(seconds / 60);
         let hours = Math.floor(minutes / 60);
-
         seconds = seconds % 60;
         minutes = minutes % 60;
-
         if (hours > 0) {
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         } else {
             return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} min`;
         }
     }
-
-    // --- PART 3: MENU LOADER ---
-
-    // Function to get ISO week number
     function getWeekNumber(d) {
-        // Copy date so don't modify original
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-        // Set to nearest Thursday: current date + 4 - current day number
-        // Make Sunday's day number 7
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-        // Get first day of year
         var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-        // Calculate full weeks to nearest Thursday
         var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-        // Return week number
         return weekNo;
     }
-
     async function loadMenu() {
         const today = new Date();
-        const currentWeek = getWeekNumber(today); // Simplified this logic
-        const currentDayIndex = today.getDay(); // 0=Sunday, 1=Monday...
-        
+        const currentWeek = getWeekNumber(today);
+        const currentDayIndex = today.getDay();
         document.getElementById('week-number').textContent = currentWeek;
-
         try {
             const response = await fetch('menu.txt');
             if (!response.ok) {
                 throw new Error('menu.txt file not found.');
             }
             const text = await response.text();
-            parseMenu(text, currentWeek, currentDayIndex);
+            parseMenu(text, currentWeek,. currentDayIndex);
         } catch (error) {
             console.error('Error loading menu:', error);
             document.getElementById('menu-grid').innerHTML = '<p style="color:red; font-size: 1.5em;">Kunde inte ladda menyn. Kontrollera att filen menu.txt finns och har rätt namn.</p>';
         }
     }
-
     function parseMenu(text, currentWeek, currentDayIndex) {
         const lines = text.split('\n');
         let activeWeek = false;
         let activeDay = '';
         const weekTag = `[WEEK ${currentWeek}]`;
         const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-        
-        const menuData = {
-            MONDAY: '',
-            TUESDAY: '',
-            WEDNESDAY: '',
-            THURSDAY: '',
-            FRIDAY: ''
-        };
-
+        const menuData = { MONDAY: '', TUESDAY: '', WEDNESDAY: '', THURSDAY: '', FRIDAY: '' };
         for (const line of lines) {
             const trimmedLine = line.trim();
-
             if (trimmedLine.startsWith('[WEEK')) {
                 activeWeek = (trimmedLine.toUpperCase() === weekTag);
             } else if (activeWeek && trimmedLine.startsWith('[')) {
@@ -198,15 +160,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 menuData[activeDay] += trimmedLine + '\n';
             }
         }
-
-        // Populate the HTML
         document.querySelector('#menu-monday .menu-content').textContent = menuData.MONDAY || 'Meny saknas';
         document.querySelector('#menu-tuesday .menu-content').textContent = menuData.TUESDAY || 'Meny saknas';
         document.querySelector('#menu-wednesday .menu-content').textContent = menuData.WEDNESDAY || 'Meny saknas';
         document.querySelector('#menu-thursday .menu-content').textContent = menuData.THURSDAY || 'Meny saknas';
         document.querySelector('#menu-friday .menu-content').textContent = menuData.FRIDAY || 'Meny saknas';
-
-        // Highlight today
         if (currentDayIndex >= 1 && currentDayIndex <= 5) {
             const todayKey = days[currentDayIndex].toLowerCase();
             const todayElement = document.getElementById(`menu-${todayKey}`);
@@ -215,13 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
-    // --- PART 4: INITIALIZE AND UPDATE ---
-
-    // Load the menu once
     loadMenu();
-
-    // Update the lounge status immediately and then every second
     updateLoungeStatus();
     setInterval(updateLoungeStatus, 1000);
 });
