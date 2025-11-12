@@ -1,35 +1,41 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- PART 1: WAKE LOCK (Keeps Screen On) ---
-    // We will pre-grant permission for this in the Admin Console
-    let wakeLock = null;
-
-    const requestWakeLock = async () => {
-        if ('wakeLock' in navigator) {
-            try {
-                wakeLock = await navigator.wakeLock.request('screen');
-                console.log('Wake Lock is active: Screen will not sleep.');
-                
-                wakeLock.addEventListener('release', () => {
-                    console.log('Wake Lock was released.');
-                });
-
-            } catch (err) {
-                console.error(`Wake Lock failed: ${err.name}, ${err.message}`);
+    // --- PART 1: WAKE LOCK (Now 100% Safe) ---
+    // We wrap the entire Wake Lock system in a try...catch block.
+    // If it fails, it will NOT stop the timer and menu from loading.
+    try {
+        let wakeLock = null;
+        const requestWakeLock = async () => {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock is active: Screen will not sleep.');
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Wake Lock was released.');
+                    });
+                } catch (err) {
+                    // This inner catch handles the request failing
+                    console.error(`Wake Lock request failed: ${err.name}, ${err.message}`);
+                }
+            } else {
+                console.warn('Wake Lock API is not supported on this browser.');
             }
-        } else {
-            console.warn('Wake Lock API is not supported on this browser.');
-        }
-    };
+        };
 
-    requestWakeLock(); // Request on load
-    document.addEventListener('visibilitychange', () => {
-        if (wakeLock !== null && document.visibilityState === 'visible') {
-            requestWakeLock(); // Re-request when tab becomes visible
-        }
-    });
+        requestWakeLock(); // Request on load
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                requestWakeLock(); // Re-request
+            }
+        });
+    } catch (e) {
+        // This outer catch handles any other fatal error in setup
+        console.error('A critical error occurred in the Wake Lock setup.', e);
+    }
+
 
     // --- PART 2: LOUNGE STATUS & COUNTDOWN ---
+    // This code will now run REGARDLESS of whether the Wake Lock fails.
 
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
@@ -44,9 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
         5: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Friday: 9:00-10:30, 11:00-13:45
         6: []  // Saturday
     };
-
-    // (All the rest of the timer and menu logic is below)
-    // ... (The rest of the file is identical to the one you just had) ...
 
     function updateLoungeStatus() {
         const now = new Date();
@@ -137,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('menu.txt file not found.');
             }
             const text = await response.text();
-            parseMenu(text, currentWeek,. currentDayIndex);
+            parseMenu(text, currentWeek, currentDayIndex);
         } catch (error) {
             console.error('Error loading menu:', error);
             document.getElementById('menu-grid').innerHTML = '<p style="color:red; font-size: 1.5em;">Kunde inte ladda menyn. Kontrollera att filen menu.txt finns och har rätt namn.</p>';
