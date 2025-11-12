@@ -1,13 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- PART 1: WAKE LOCK (Brute Force Timer) ---
-    // This is the new, simple method that should not cause the 'X' bar.
-    
-    // A simple function that just requests the lock.
     const requestWakeLock = async () => {
         if ('wakeLock' in navigator) {
             try {
-                // We don't need to save the lock, just request it.
                 await navigator.wakeLock.request('screen');
                 console.log('Wake Lock request successful.');
             } catch (err) {
@@ -15,32 +11,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
-
-    // Request the lock when the page loads
     requestWakeLock();
-
-    // --- THIS IS THE FIX ---
-    // Every 60 seconds, re-request the lock to keep it active.
     setInterval(requestWakeLock, 60000); 
-    // ---------------------
 
     // --- PART 2: LOUNGE STATUS & COUNTDOWN ---
 
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
 
-    // THIS IS THE CORRECTED SCHEDULE
     const schedule = {
         0: [], // Sunday
         1: [ [11, 0], [13, 45] ], // Monday: 11:00-13:45
-        2: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Tuesday: 9:00-10:30, 11:00-13:45
-        3: [ [9, 0], [13, 45] ], // Wednesday: 9:00-13:45
-        4: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Thursday: 9:00-10:30, 11:00-13:45
-        5: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Friday: 9:00-10:30, 11:00-13:45
+        2: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Tuesday
+        3: [ [9, 0], [13, 45] ], // Wednesday
+        4: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Thursday
+        5: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Friday
         6: []  // Saturday
     };
 
-    // (The rest of the file is identical)
     function updateLoungeStatus() {
         const now = new Date();
         const currentDay = now.getDay();
@@ -98,20 +86,29 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+
+    // --- THIS IS THE MODIFIED FUNCTION ---
     function formatCountdown(targetTime) {
         const now = new Date();
         const diff = targetTime.getTime() - now.getTime();
+        
         let seconds = Math.max(0, Math.floor(diff / 1000));
         let minutes = Math.floor(seconds / 60);
         let hours = Math.floor(minutes / 60);
+
         seconds = seconds % 60;
         minutes = minutes % 60;
+
         if (hours > 0) {
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            // Format: 02H:58M:01S
+            return `${String(hours).padStart(2, '0')}H:${String(minutes).padStart(2, '0')}M:${String(seconds).padStart(2, '0')}S`;
         } else {
-            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} min`;
+            // Format: 58M:01S
+            return `${String(minutes).padStart(2, '0')}M:${String(seconds).padStart(2, '0')}S`;
         }
     }
+    // --- END OF MODIFICATION ---
+
     function getWeekNumber(d) {
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
