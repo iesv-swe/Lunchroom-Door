@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- PART 1: WAKE LOCK (Yesterday's version) ---
+    // --- PART 1: WAKE LOCK (Now "Resilient") ---
     let wakeLock = null;
 
     const requestWakeLock = async () => {
@@ -8,6 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 wakeLock = await navigator.wakeLock.request('screen');
                 console.log('Wake Lock is active: Screen will not sleep.');
+
+                // --- THIS IS THE FIX ---
+                // If the lock is ever released, get it again.
+                wakeLock.addEventListener('release', () => {
+                    console.log('Wake Lock was released, re-acquiring...');
+                    requestWakeLock();
+                });
+                // ---------------------
+
             } catch (err) {
                 console.error(`Wake Lock failed: ${err.name}, ${err.message}`);
             }
@@ -42,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         6: []  // Saturday
     };
 
-    // (The rest of the file is identical to the one that worked)
+    // (The rest of the file is identical)
     function updateLoungeStatus() {
         const now = new Date();
         const currentDay = now.getDay();
@@ -160,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('#menu-wednesday .menu-content').textContent = menuData.WEDNESDAY || 'Meny saknas';
         document.querySelector('#menu-thursday .menu-content').textContent = menuData.THURSDAY || 'Meny saknas';
         document.querySelector('#menu-friday .menu-content').textContent = menuData.FRIDAY || 'Meny saknas';
-        if (currentDayIndex >= 1 && currentDay_index <= 5) {
+        if (currentDayIndex >= 1 && currentDayIndex <= 5) {
             const todayKey = days[currentDayIndex].toLowerCase();
             const todayElement = document.getElementById(`menu-${todayKey}`);
             if (todayElement) {
