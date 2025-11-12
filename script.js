@@ -9,10 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 wakeLock = await navigator.wakeLock.request('screen');
                 console.log('Wake Lock is active: Screen will not sleep.');
                 
-                // Re-acquire lock if visibility changes
                 wakeLock.addEventListener('release', () => {
-                    console.log('Wake Lock was released, re-acquiring...');
-                    requestWakeLock();
+                    // This event fires when the lock is released, e.g., by tab change
+                    console.log('Wake Lock was released.');
                 });
 
             } catch (err) {
@@ -26,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Request the lock when the page loads
     requestWakeLock();
 
-    // Re-request the lock when the tab becomes visible again
+    // Re-request the lock when the tab becomes visible again (as visibility change releases the lock)
     document.addEventListener('visibilitychange', () => {
         if (wakeLock !== null && document.visibilityState === 'visible') {
             requestWakeLock();
@@ -38,15 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
 
-    // Define the lounge schedule
-    // Times are in [hours, minutes]
+    // THIS IS THE SCHEDULE - PLEASE DOUBLE-CHECK IT
     const schedule = {
         0: [], // Sunday
-        1: [ [11, 0], [13, 45] ], // Monday
-        2: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Tuesday
-        3: [ [9, 0], [13, 45] ], // Wednesday
-        4: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Thursday
-        5: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Friday
+        1: [ [11, 0], [13, 45] ], // Monday: 11:00-13:45
+        2: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Tuesday: 9:00-10:30, 11:00-13:45
+        3: [ [9, 0], [13, 45] ], // Wednesday: 9:00-13:45
+        4: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Thursday: 9:00-10:30, 11:00-13:45
+        5: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Friday: 9:00-10:30, 11:00-13:45
         6: []  // Saturday
     };
 
@@ -141,24 +139,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to get ISO week number
     function getWeekNumber(d) {
+        // Copy date so don't modify original
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        // Set to nearest Thursday: current date + 4 - current day number
+        // Make Sunday's day number 7
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        // Get first day of year
         var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        // Calculate full weeks to nearest Thursday
         var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        // Return week number
         return weekNo;
-}
+    }
 
     async function loadMenu() {
         const today = new Date();
-        // Manually set to Tuesday (Day 2) for testing
-        // const currentDayIndex = 2; 
+        const currentWeek = getWeekNumber(today); // Simplified this logic
         const currentDayIndex = today.getDay(); // 0=Sunday, 1=Monday...
-        
-        // This is a "hack" to get the week number.
-        // We set the date to Thursday (day 4) of this week to get the correct ISO week number.
-        const currentWeekDate = new Date(today.getTime());
-        currentWeekDate.setDate(today.getDate() + 4 - (today.getDay() || 7));
-        const currentWeek = getWeekNumber(currentWeekDate);
         
         document.getElementById('week-number').textContent = currentWeek;
 
