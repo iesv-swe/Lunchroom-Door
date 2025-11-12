@@ -1,9 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- PART 1: WAKE LOCK (Brute Force Timer) ---
+    // --- PART 1: WAKE LOCK (v9 "Brute Force" Timer) ---
+    // This is the simple method that does NOT cause the 'X' bar.
+    
     const requestWakeLock = async () => {
         if ('wakeLock' in navigator) {
             try {
+                // We don't need to save the lock, just request it.
                 await navigator.wakeLock.request('screen');
                 console.log('Wake Lock request successful.');
             } catch (err) {
@@ -11,8 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
+
+    // Request the lock when the page loads
     requestWakeLock();
+
+    // --- THIS IS THE FIX ---
+    // Every 60 seconds, re-request the lock to keep it active.
     setInterval(requestWakeLock, 60000); 
+    // ---------------------
 
     // --- PART 2: LOUNGE STATUS & COUNTDOWN ---
 
@@ -87,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- THIS IS THE MODIFIED FUNCTION ---
+    // --- THIS IS THE H/M/S FORMATTING ---
     function formatCountdown(targetTime) {
         const now = new Date();
         const diff = targetTime.getTime() - now.getTime();
