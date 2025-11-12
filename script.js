@@ -1,39 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- PART 1: WAKE LOCK (Now "Resilient") ---
-    let wakeLock = null;
-
+    // --- PART 1: WAKE LOCK (Brute Force Timer) ---
+    // This is the new, simple method that should not cause the 'X' bar.
+    
+    // A simple function that just requests the lock.
     const requestWakeLock = async () => {
         if ('wakeLock' in navigator) {
             try {
-                wakeLock = await navigator.wakeLock.request('screen');
-                console.log('Wake Lock is active: Screen will not sleep.');
-
-                // --- THIS IS THE FIX ---
-                // If the lock is ever released, get it again.
-                wakeLock.addEventListener('release', () => {
-                    console.log('Wake Lock was released, re-acquiring...');
-                    requestWakeLock();
-                });
-                // ---------------------
-
+                // We don't need to save the lock, just request it.
+                await navigator.wakeLock.request('screen');
+                console.log('Wake Lock request successful.');
             } catch (err) {
                 console.error(`Wake Lock failed: ${err.name}, ${err.message}`);
             }
-        } else {
-            console.warn('Wake Lock API is not supported on this browser.');
         }
     };
 
     // Request the lock when the page loads
     requestWakeLock();
 
-    // Re-request the lock when the tab becomes visible again
-    document.addEventListener('visibilitychange', () => {
-        if (wakeLock !== null && document.visibilityState === 'visible') {
-            requestWakeLock();
-        }
-    });
+    // --- THIS IS THE FIX ---
+    // Every 60 seconds, re-request the lock to keep it active.
+    setInterval(requestWakeLock, 60000); 
+    // ---------------------
 
     // --- PART 2: LOUNGE STATUS & COUNTDOWN ---
 
