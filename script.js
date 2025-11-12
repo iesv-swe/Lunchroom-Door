@@ -1,41 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- PART 1: WAKE LOCK (Now 100% Safe) ---
-    // We wrap the entire Wake Lock system in a try...catch block.
-    // If it fails, it will NOT stop the timer and menu from loading.
-    try {
-        let wakeLock = null;
-        const requestWakeLock = async () => {
-            if ('wakeLock' in navigator) {
-                try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock is active: Screen will not sleep.');
-                    wakeLock.addEventListener('release', () => {
-                        console.log('Wake Lock was released.');
-                    });
-                } catch (err) {
-                    // This inner catch handles the request failing
-                    console.error(`Wake Lock request failed: ${err.name}, ${err.message}`);
-                }
-            } else {
-                console.warn('Wake Lock API is not supported on this browser.');
-            }
-        };
+    // --- (ALL WAKE LOCK CODE REMOVED) ---
 
-        requestWakeLock(); // Request on load
-        document.addEventListener('visibilitychange', () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
-                requestWakeLock(); // Re-request
-            }
-        });
-    } catch (e) {
-        // This outer catch handles any other fatal error in setup
-        console.error('A critical error occurred in the Wake Lock setup.', e);
-    }
-
-
-    // --- PART 2: LOUNGE STATUS & COUNTDOWN ---
-    // This code will now run REGARDLESS of whether the Wake Lock fails.
+    // --- PART 1: LOUNGE STATUS & COUNTDOWN ---
 
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
