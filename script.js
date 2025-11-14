@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const requestWakeLock = async () => {
         if ('wakeLock' in navigator) {
             try {
-                // We don't need to save the lock, just request it.
                 await navigator.wakeLock.request('screen');
                 console.log('Wake Lock request successful.');
             } catch (err) {
@@ -14,14 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
-
-    // Request the lock when the page loads
     requestWakeLock();
-
-    // --- THIS IS THE FIX ---
-    // Every 60 seconds, re-request the lock to keep it active.
-    setInterval(requestWakeLock, 60000); 
-    // ---------------------
+    setInterval(requestWakeLock, 60000); // Re-request every 60 seconds
 
     // --- PART 2: LOUNGE STATUS & COUNTDOWN ---
 
@@ -109,14 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
         minutes = minutes % 60;
 
         if (hours > 0) {
-            // Format: 02H:58M:01S
             return `${String(hours).padStart(2, '0')}H:${String(minutes).padStart(2, '0')}M:${String(seconds).padStart(2, '0')}S`;
         } else {
-            // Format: 58M:01S
             return `${String(minutes).padStart(2, '0')}M:${String(seconds).padStart(2, '0')}S`;
         }
     }
-    // --- END OF MODIFICATION ---
 
     function getWeekNumber(d) {
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
