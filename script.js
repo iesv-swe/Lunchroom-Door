@@ -1,8 +1,11 @@
+// --- VERSION 16 ---
+// Wake Lock: v9 "Brute Force" 1-min timer
+// Timer: H/M/S formatting
+// Layout: Single-day support
+
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- PART 1: WAKE LOCK (v9 "Brute Force" Timer) ---
-    // This is the simple method that does NOT cause the 'X' bar.
-    
     const requestWakeLock = async () => {
         if ('wakeLock' in navigator) {
             try {
