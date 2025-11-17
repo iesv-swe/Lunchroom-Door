@@ -1,9 +1,8 @@
 /* Basic setup */
 body {
+    /* THIS IS THE SANS-SERIF FONT YOU ASKED FOR */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    /* SCHOOL COLOR: Navy Blue */
     background-color: #102d69;
-    /* SCHOOL COLOR: Light Grey */
     color: #dbdad8;
     padding: 20px;
     height: 100vh;
@@ -19,12 +18,14 @@ body {
     margin: 0 auto;
 }
 
-/* --- STATUS STYLING (BIGGER) --- */
-
-#status-container {
-    /* padding-top: 40px; REMOVED */
+/* --- NEW LOGO STYLING --- */
+#school-logo {
+    max-height: 120px; /* You can change this */
+    width: auto;
+    margin-bottom: 20px;
 }
 
+/* --- STATUS STYLING (BIGGER) --- */
 #lounge-status {
     font-size: 6em;
     font-weight: bold;
@@ -34,30 +35,22 @@ body {
 
 #lounge-timer {
     font-size: 3.5em;
-    /* SCHOOL COLOR: IES Logo Grey */
     color: #9a9b9d;
     margin-top: 10px;
 }
 
-#lounge-status.open {
-    color: #4CAF50; /* Green */
-}
-
-#lounge-status.closed {
-    color: #F44336; /* Red */
-}
+#lounge-status.open { color: #4CAF50; }
+#lounge-status.closed { color: #F44336; }
 
 
 /* --- MENU STYLING (SINGLE DAY, LARGE) --- */
-
 hr {
-    /* SCHOOL COLOR: IES Logo Grey */
     border: 1px solid #9a9b9d;
     margin: 40px 0;
 }
 
 #menu-container h1 {
-    /* Hiding "Veckans Lunchmeny" to make room */
+    /* Hiding "Veckans Lunchmeny" */
     display: none;
 }
 
@@ -70,40 +63,33 @@ hr {
     /* HIDE ALL DAYS BY DEFAULT */
     display: none; 
     
-    /* A slightly lighter, custom navy for the box */
     background-color: #1f408a;
     border-radius: 8px;
     padding: 20px;
     flex-basis: 100%;
-    max-width: 900px; /* Constrain width for readability */
+    max-width: 900px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* THIS IS THE NEW LOGIC: SHOW *ONLY* THE CURRENT DAY */
+/* SHOW *ONLY* THE CURRENT DAY */
 .menu-day.today {
     display: block;
-    /* SCHOOL COLOR: IES Logo Blue */
     border: 3px solid #00a0df;
     background-color: rgba(0, 160, 223, 0.1);
 }
 
-/* This media query is no longer needed */
-/* @media (min-width: 1000px) { ... } */
-
-
 .menu-day h3 {
-    font-size: 5em; /* INCREASED from 1.6em */
-    /* SCHOOL COLOR: IES Logo Blue */
+    font-size: 5em;
     color: #00a0df;
     margin-top: 0;
     margin-bottom: 20px;
 }
 
 .menu-content {
-    font-family: inherit;
-    font-size: 3em; /* INCREASED from 1.2em */
-    line-height: 1.4; /* Added for readability */
-    /* SCHOOL COLOR: Light Grey */
+    /* THIS FORCES THE SANS-SERIF FONT (overrides <pre>) */
+    font-family: inherit; 
+    font-size: 3em;
+    line-height: 1.4;
     color: #dbdad8;
     text-align: left;
     white-space: pre-wrap;
