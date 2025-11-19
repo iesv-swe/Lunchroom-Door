@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Lounge Sign</title>
-    <link rel="stylesheet" href="style.css?v=9">
+    <!-- Styles v10 (Logo Left, Clock Right) -->
+    <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
 
-    <div class="container">
-        <img src="logo.png" alt="School Logo" id="school-logo">
+    <!-- LOGO BOTTOM LEFT -->
+    <img src="logo.png" alt="School Logo" id="school-logo">
 
+    <div class="container">
         <div id="status-container">
             <h2 id="lounge-status">Laddar...</h2>
             <p id="lounge-timer"></p>
@@ -18,6 +20,7 @@
 
         <hr>
 
+        <!-- LUNCH DASHBOARD -->
         <div id="lunch-dashboard">
             <div class="lunch-row">
                 <div class="lunch-col">
@@ -33,6 +36,7 @@
             </div>
         </div>
 
+        <!-- FOOD MENU -->
         <div id="menu-container">
             <h1>Veckans Lunchmeny (Vecka <span id="week-number"></span>)</h1>
             <div id="menu-grid">
@@ -60,11 +64,13 @@
         </div>
     </div>
 
+    <!-- CLOCK BOTTOM RIGHT -->
     <div id="clock-display">
         <span id="clock-time"></span>
         <span id="clock-date"></span>
     </div>
 
-    <script src="script.js?v=19"></script>
+    <!-- Script v20 (Delayed Wake Lock) -->
+    <script src="script.js?v=20"></script>
 </body>
 </html>
