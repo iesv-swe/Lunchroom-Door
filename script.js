@@ -1,60 +1,42 @@
-// --- v37 CACHE FIX & SCROLL JIGGLE HACK ---
-// Fix: Uses {cache: 'no-cache'} to force fresh file loading for menu/lessons.
-// Fix: Corrected Week Number calculation typo.
-// Feature: Scroll Jiggle to prevent sleep.
-// Feature: Filters 'support' and 'prao' from lunch.
+// --- v38 RESTORED FILE FETCHING ---
+// Fix: Reverted fetch logic to use query strings ('?t=1234') instead of 
+// {cache: 'no-cache'}, which was likely causing network errors on your server.
+// Feature: Visual Debug added to menu error message (Shows Week #).
 
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- CONFIGURATION ---
-    // Fire event every 30 seconds (30,000ms).
     const JIGGLE_INTERVAL = 30000; 
 
-    // --- PART 1: THE JIGGLE HACK (Keeps screen awake) ---
+    // --- PART 1: THE JIGGLE HACK ---
     function initJiggleHack() {
-        console.log("Activating scroll simulation (v37) to prevent sleep...");
-
+        console.log("Activating scroll simulation (v38) to prevent sleep...");
         function fireScroll() {
-            // Simulate a generic scroll event to trick OS power management
-            const event = new Event('scroll', {
-                bubbles: true, 
-                cancelable: true
-            });
+            const event = new Event('scroll', { bubbles: true, cancelable: true });
             document.body.dispatchEvent(event);
         }
-
-        // Start the jiggle loop
         setInterval(fireScroll, JIGGLE_INTERVAL);
     }
-
-    // Start the system
     initJiggleHack();
 
-    // --- PART 2: CLOCK (Bottom Right) ---
+    // --- PART 2: CLOCK ---
     function updateClock() {
         const now = new Date();
-        // Uses Swedish locale format for time (HH:MM)
         const timeString = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
         const clockEl = document.getElementById('bottom-right-clock');
         if (clockEl) clockEl.textContent = timeString;
     }
-    // Update every second
     setInterval(updateClock, 1000);
     updateClock(); 
 
-    // --- PART 3: LOUNGE OPEN/CLOSED STATUS ---
+    // --- PART 3: LOUNGE STATUS ---
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
     
-    // Day schedules (Day: 0=Sunday, 1=Monday, ..., 5=Friday, 6=Saturday)
     const schedule = {
-        0: [], // Sunday
-        1: [[11,0],[13,45]], // Monday
-        2: [[9,0],[10,30],[11,0],[13,45]], // Tuesday
-        3: [[9,0],[13,45]], // Wednesday
-        4: [[9,0],[10,30],[11,0],[13,45]], // Thursday
-        5: [[9,0],[10,30],[11,0],[13,45]], // Friday
-        6: [] // Saturday
+        0: [], 1: [[11,0],[13,45]], 2: [[9,0],[10,30],[11,0],[13,45]], 
+        3: [[9,0],[13,45]], 4: [[9,0],[10,30],[11,0],[13,45]], 
+        5: [[9,0],[10,30],[11,0],[13,45]], 6: []
     };
 
     function updateLoungeStatus() {
@@ -65,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let isOpen = false;
         let nextEventTime = null;
         
-        // 1. Check if currently open
         for (let i = 0; i < daySchedule.length; i += 2) {
             const openTime = daySchedule[i][0] * 60 + daySchedule[i][1];
             const closeTime = daySchedule[i + 1][0] * 60 + daySchedule[i + 1][1];
@@ -76,8 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             }
         }
-        
-        // 2. If closed, find next open time today
         if (!isOpen) {
             for (let i = 0; i < daySchedule.length; i += 2) {
                 const openTime = daySchedule[i][0] * 60 + daySchedule[i][1];
@@ -88,8 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        
-        // 3. If no more today, find next open day
         if (nextEventTime === null) {
             let nextDay = (currentDay + 1) % 7;
             let daysToAdd = 1;
@@ -105,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Update DOM (Swedish)
         if (isOpen) {
             statusElement.textContent = 'Loungen är ÖPPEN';
             statusElement.className = 'open';
@@ -129,29 +105,27 @@ document.addEventListener('DOMContentLoaded', () => {
         let hours = Math.floor(minutes / 60);
         seconds = seconds % 60;
         minutes = minutes % 60;
-        
         if (hours > 0) {
             return `${String(hours).padStart(2, '0')}H:${String(minutes).padStart(2, '0')}M:${String(seconds).padStart(2, '0')}S`;
         } else {
             return `${String(minutes).padStart(2, '0')}M:${String(seconds).padStart(2, '0')}S`;
         }
     }
-
     updateLoungeStatus();
     setInterval(updateLoungeStatus, 1000);
 
-    // --- PART 4: LUNCH DASHBOARD (Based on Lessons.txt) ---
-    
+    // --- PART 4: LUNCH DASHBOARD ---
     async function safeLoadLessons() {
         try {
-            // CACHE FIX: force fresh reload
-            const response = await fetch(`Lessons.txt`, { cache: 'no-cache' });
+            // FIX: Reverted to Query String cache buster (safer for all servers)
+            const cb = Date.now();
+            const response = await fetch(`Lessons.txt?t=${cb}`);
             
             if (!response.ok) throw new Error('Lessons.txt not found');
             const text = await response.text();
             parseLessons(text);
         } catch (error) {
-            console.warn('Lesson load failed, hiding dashboard:', error);
+            console.warn('Lesson load failed:', error);
             const dashboard = document.getElementById('lunch-dashboard');
             if(dashboard) dashboard.style.display = 'none';
         }
@@ -177,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const startMin = timeToMin(startTimeRaw);
                 const endMin = startMin + parseInt(lengthRaw);
                 
-                // FILTER: Exclude 'support' and 'prao'
+                // Filter Logic
                 const normalizedGroup = group ? group.toLowerCase() : '';
                 const isExcluded = normalizedGroup.includes('support') || normalizedGroup.includes('prao');
 
@@ -214,10 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let nextStartTime = null;
 
         todaysLunches.forEach(event => {
-            // Groups having lunch NOW
             if (nowMin >= event.start && nowMin < event.end) nowGroups.push(event.group);
-            
-            // Groups having lunch NEXT
             if (nowMin < event.start) {
                 if (nextStartTime === null || event.start === nextStartTime) {
                     nextStartTime = event.start;
@@ -226,12 +197,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // FILTER: Remove groups currently eating from Next list
         const nowGroupSet = new Set(nowGroups);
         const filteredNextGroups = nextGroups.filter(group => !nowGroupSet.has(group));
-        
         const timeToNext = nextStartTime ? nextStartTime - nowMin : 9999;
-        // Show if lunch now OR next starts in <= 5 mins
         const shouldShow = (nowGroups.length > 0) || (timeToNext <= 5);
 
         if (shouldShow && dashboard) {
@@ -254,33 +222,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     setInterval(updateLunchDashboard, 5000);
 
-    // --- PART 5: MENU (Based on menu.txt) ---
-
+    // --- PART 5: MENU ---
     function getWeekNumber(d) {
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-        // FIX: Corrected function name from getUTCFullullYear
         var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)); 
         return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     }
 
     async function safeLoadMenu() {
+        // FIX: Reverted to Query String cache buster (safer)
+        const cb = Date.now();
+        const currentWeek = getWeekNumber(new Date());
+        document.getElementById('week-number').textContent = currentWeek;
+
         try {
-            const today = new Date();
-            const currentWeek = getWeekNumber(today);
-            document.getElementById('week-number').textContent = currentWeek;
-            
-            // CACHE FIX: force fresh reload
-            const response = await fetch(`menu.txt`, { cache: 'no-cache' });
-            
+            const response = await fetch(`menu.txt?t=${cb}`);
             if (!response.ok) throw new Error('menu.txt not found');
             const text = await response.text();
-            parseMenu(text, currentWeek, today.getDay());
+            parseMenu(text, currentWeek, new Date().getDay());
         } catch (error) {
             console.warn('Menu load failed:', error);
             document.getElementById('menu-grid').innerHTML = 
-                '<p style="color:white; font-size:3em;">❌ Meny kunde inte laddas.</p>' +
-                '<p style="color:#00a0df; font-size:1.5em; margin-top: 10px;">Dubbelkolla att filen heter **menu.txt**.</p>';
+                `<p style="color:white; font-size:2em;">❌ Meny kunde inte laddas.<br><span style="font-size:0.6em; color:#aaa;">Söker efter: [WEEK ${currentWeek}] i menu.txt</span></p>`;
         }
     }
 
@@ -296,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const trimmedLine = line.trim();
             if (trimmedLine.toUpperCase().startsWith('[WEEK')) {
                 activeWeek = (trimmedLine.toUpperCase() === weekTag);
-            } else if (activeWeek && trimmedLine.startsWith('[') && trimmedLine.endsWith(']')) {
+            } else if (activeWeek && trimmedLine.startsWith('[')) {
                 activeDay = trimmedLine.substring(1, trimmedLine.length - 1).toUpperCase();
             } else if (activeWeek && activeDay && menuData.hasOwnProperty(activeDay) && trimmedLine && !trimmedLine.startsWith('#')) {
                 menuData[activeDay] += trimmedLine + '\n';
