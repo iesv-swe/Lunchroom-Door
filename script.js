@@ -1,6 +1,6 @@
-// --- v43 RESTORED LAYOUT ---
-// Style: Reverted CSS to the original spacious design.
-// Features: Wake Lock API, Support/Prao Filters, Query-String Cache Busting.
+// --- v44 FINAL ---
+// Layout: CSS is now embedded in HTML to prevent layout breakage.
+// Logic: Wake Lock API, Support/Prao Filters, Robust File Loading.
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -23,14 +23,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Re-acquire lock only when the screen comes back into view (Visibility Change)
+    // Re-acquire lock
     document.addEventListener('visibilitychange', async () => {
         if (document.visibilityState === 'visible' && wakeLock === null) {
             await requestWakeLock();
         }
     });
 
-    // Initial Request
     requestWakeLock();
 
     // --- PART 2: CLOCK ---
@@ -96,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // English Status
         if (isOpen) {
             statusElement.textContent = 'The Lounge is OPEN';
             statusElement.className = 'open';
@@ -165,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const startMin = timeToMin(startTimeRaw);
                 const endMin = startMin + parseInt(lengthRaw);
                 
-                // Filter Logic: Exclude Support and Prao
+                // Filter Logic
                 const normalizedGroup = group ? group.toLowerCase() : '';
                 const isExcluded = normalizedGroup.includes('support') || normalizedGroup.includes('prao');
 
