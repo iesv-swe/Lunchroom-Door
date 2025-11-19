@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Lounge Sign</title>
-    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
     <div class="container">
-
         <img src="logo.png" alt="School Logo" id="school-logo">
 
         <div id="status-container">
@@ -18,6 +17,21 @@
         </div>
 
         <hr>
+
+        <div id="lunch-dashboard">
+            <div class="lunch-row">
+                <div class="lunch-col">
+                    <span class="lunch-label">NOW EATING</span>
+                    <span id="lunch-now-groups" class="lunch-groups">-</span>
+                </div>
+                <div style="border-left: 1px solid #9a9b9d; margin: 0 20px;"></div>
+                <div class="lunch-col">
+                    <span class="lunch-label">UP NEXT</span>
+                    <span id="lunch-next-groups" class="lunch-groups">-</span>
+                    <span id="lunch-next-timer"></span>
+                </div>
+            </div>
+        </div>
 
         <div id="menu-container">
             <h1>Veckans Lunchmeny (Vecka <span id="week-number"></span>)</h1>
@@ -46,6 +60,11 @@
         </div>
     </div>
 
-    <script src="script.js?v=16"></script>
+    <div id="clock-display">
+        <span id="clock-time"></span>
+        <span id="clock-date"></span>
+    </div>
+
+    <script src="script.js?v=19"></script>
 </body>
 </html>
