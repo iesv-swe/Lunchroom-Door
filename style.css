@@ -1,111 +1,164 @@
-/* v22 - Restored Student Lounge Design */
-
-:root {
-    --bg-color: #121212;       /* Deep dark background */
-    --card-bg: #1e1e1e;        /* Slightly lighter card */
-    --accent-color: #4a90e2;   /* Student Lounge Blue */
-    --text-main: #ffffff;
-    --text-muted: #b0b0b0;
-    --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-}
-
-body, html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    font-family: var(--font-family);
-    overflow: hidden;
-}
-
-/* --- Layout Containers --- */
-#main-container {
-    display: flex;
-    flex-direction: column;
+/* Basic setup */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #102d69;
+    color: #dbdad8;
+    padding: 20px;
     height: 100vh;
-    padding: 40px;
     box-sizing: border-box;
-}
-
-/* Header Area */
-header {
-    border-bottom: 2px solid var(--accent-color);
-    margin-bottom: 30px;
-    padding-bottom: 10px;
-}
-
-h1 {
-    margin: 0;
-    font-size: 2.5rem;
-    color: var(--accent-color);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-/* Content Card Area */
-#content-card {
-    flex: 1; /* Takes remaining space */
-    background-color: var(--card-bg);
-    border-radius: 15px;
-    padding: 40px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start; /* Align text to top */
-    font-size: 1.8rem;
-    line-height: 1.6;
-    white-space: pre-wrap; /* Preserves formatting of text files */
+    justify-content: center;
+    text-align: center;
+    position: relative; 
+    overflow: hidden; /* Added to prevent scrollbars on Kiosk */
 }
 
-/* Content Headings (injected by JS) */
-#content-card h2 {
-    margin-top: 0;
-    color: var(--accent-color);
-    border-bottom: 1px solid #333;
-    padding-bottom: 15px;
+.container {
+    width: 95%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-bottom: 150px; 
 }
 
-/* --- Footer Elements --- */
-#footer {
-    height: 100px;
-    display: flex;
-    justify-content: space-between; /* Pushes Logo left, Clock right */
-    align-items: flex-end;
-    padding-top: 20px;
-}
-
-#logo {
-    height: 80px;
+/* --- LOGO STYLING --- */
+#school-logo {
+    max-height: 120px;
     width: auto;
-    /* Drop shadow for logo visibility */
-    filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); 
+    margin-bottom: 20px;
 }
 
-#clock {
-    font-size: 3.5rem;
-    font-weight: 300;
-    color: var(--text-main);
-    text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+/* --- STATUS STYLING --- */
+#lounge-status {
+    font-size: 6em;
+    font-weight: bold;
+    margin: 0;
+    text-transform: uppercase;
 }
 
-/* --- Diagnostics (Kept but stylized) --- */
-#debug-console {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 150px; /* Smaller now */
-    background: rgba(0, 0, 0, 0.9);
-    border-bottom: 1px solid red;
-    color: #00ff00;
-    font-family: monospace;
-    font-size: 12px;
+#lounge-timer {
+    font-size: 3.5em;
+    color: #9a9b9d;
+    margin-top: 10px;
+}
+
+#lounge-status.open { color: #4CAF50; }
+#lounge-status.closed { color: #F44336; }
+
+
+/* --- LUNCH DASHBOARD (Now/Next) --- */
+#lunch-dashboard {
+    display: none; /* Hidden by default */
+    margin: 20px auto;
+    width: 90%;
+    max-width: 1000px;
+    background-color: #1f408a;
+    border: 2px solid #00a0df;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.lunch-row {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+}
+
+.lunch-col {
+    flex: 1;
     padding: 10px;
-    z-index: 9999;
-    overflow-y: auto;
-    opacity: 0.8; 
-    /* Toggle this to 'none' later when done debugging */
-    display: block; 
+}
+
+.lunch-label {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #9a9b9d;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.lunch-groups {
+    font-size: 3em;
+    font-weight: bold;
+    color: #ffffff;
+    display: block;
+}
+
+#lunch-next-timer {
+    font-size: 1.2em;
+    color: #F44336; /* Red countdown */
+    font-weight: bold;
+    display: block;
+    margin-top: 5px;
+}
+
+
+/* --- MENU STYLING --- */
+hr {
+    border: 1px solid #9a9b9d;
+    margin: 40px 0;
+}
+
+#menu-container h1 { display: none; }
+
+#menu-grid {
+    display: flex;
+    justify-content: center; 
+}
+
+.menu-day {
+    display: none; 
+    background-color: #1f408a;
+    border-radius: 8px;
+    padding: 20px;
+    flex-basis: 100%;
+    max-width: 900px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.menu-day.today {
+    display: block;
+    border: 3px solid #00a0df;
+    background-color: rgba(0, 160, 223, 0.1);
+}
+
+.menu-day h3 {
+    font-size: 5em;
+    color: #00a0df;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.menu-content {
+    font-family: inherit; 
+    font-size: 3em;
+    line-height: 1.4;
+    color: #dbdad8;
+    text-align: left;
+    white-space: pre-wrap;
+    margin: 0;
+}
+
+/* --- CLOCK (Bottom Center) --- */
+#clock-display {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: #dbdad8;
+    line-height: 1.2;
+}
+
+#clock-time {
+    font-size: 4em;
+    font-weight: bold;
+    color: white;
+    display: block;
+}
+
+#clock-date {
+    font-size: 1.5em;
+    color: #9a9b9d;
+    display: block;
 }
