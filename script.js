@@ -1,37 +1,179 @@
-// --- VERSION 16 ---
-// Wake Lock: v9 "Brute Force" 1-min timer
-// Timer: H/M/S formatting
-// Layout: Single-day support
+// --- VERSION 19 ---
+// Feature: Clock moved to Bottom Center
+// Feature: Lunch Dashboard (5 min pre-show, auto-hide)
+// Feature: "Business Hours" Wake Lock (06:00-18:00)
 
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // --- PART 1: WAKE LOCK (v9 "Brute Force" Timer) ---
-    const requestWakeLock = async () => {
-        if ('wakeLock' in navigator) {
-            try {
-                await navigator.wakeLock.request('screen');
-                console.log('Wake Lock request successful.');
-            } catch (err) {
-                console.error(`Wake Lock failed: ${err.name}, ${err.message}`);
+
+    // --- PART 1: SMART WAKE LOCK ---
+    let wakeLock = null;
+    const managePower = async () => {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const isBusinessHours = currentHour >= 6 && currentHour < 18;
+
+        if (isBusinessHours) {
+            if (!wakeLock && 'wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock ACTIVE');
+                } catch (err) { console.error('Wake Lock failed:', err); }
+            }
+        } else {
+            if (wakeLock) {
+                await wakeLock.release();
+                wakeLock = null;
+                console.log('Wake Lock RELEASED (Sleep Mode)');
             }
         }
     };
-    requestWakeLock();
-    setInterval(requestWakeLock, 60000); // Re-request every 60 seconds
+    managePower();
+    setInterval(managePower, 60000);
 
-    // --- PART 2: LOUNGE STATUS & COUNTDOWN ---
+    // --- PART 2: CLOCK & DATE (Bottom Center) ---
+    function updateClock() {
+        const now = new Date();
+        const dateString = now.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' });
+        const timeString = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+        
+        // Capitalize first letter of day
+        const formattedDate = dateString.charAt(0).toUpperCase() + dateString.slice(1);
 
+        const timeEl = document.getElementById('clock-time');
+        const dateEl = document.getElementById('clock-date');
+        
+        if (timeEl) timeEl.textContent = timeString;
+        if (dateEl) dateEl.textContent = formattedDate;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // --- PART 3: LUNCH SCHEDULE PARSER ---
+    let lunchSchedule = {};
+
+    async function loadLessons() {
+        try {
+            const response = await fetch('Lessons.txt');
+            if (!response.ok) throw new Error('Lessons.txt not found');
+            const text = await response.text();
+            parseLessons(text);
+        } catch (error) {
+            console.error('Error loading lessons:', error);
+        }
+    }
+
+    function parseLessons(text) {
+        const lines = text.split('\n');
+        const dayMap = { 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thur': 4, 'Fri': 5, 'Sat': 6, 'Sun': 0 };
+        lunchSchedule = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+
+        lines.forEach(line => {
+            const cols = line.split('\t');
+            if (cols.length < 7) return;
+
+            const subject = cols[1];
+            const dayStr = cols[2];
+            const startTimeRaw = cols[3];
+            const lengthRaw = cols[4];
+            const group = cols[6];
+
+            if (subject && subject.includes('Lunch') && dayMap[dayStr]) {
+                const dayNum = dayMap[dayStr];
+                const startMin = timeToMin(startTimeRaw);
+                const endMin = startMin + parseInt(lengthRaw);
+
+                if (group) {
+                    lunchSchedule[dayNum].push({
+                        group: group,
+                        start: startMin,
+                        end: endMin
+                    });
+                }
+            }
+        });
+        
+        for (let d in lunchSchedule) {
+            lunchSchedule[d].sort((a, b) => a.start - b.start);
+        }
+        updateLunchDashboard();
+    }
+
+    function timeToMin(timeStr) {
+        const t = parseInt(timeStr);
+        const hours = Math.floor(t / 100);
+        const minutes = t % 100;
+        return hours * 60 + minutes;
+    }
+
+    // --- PART 4: LUNCH DASHBOARD ---
+    function updateLunchDashboard() {
+        const now = new Date();
+        const currentDay = now.getDay();
+        const currentHours = now.getHours();
+        const currentMinutes = now.getMinutes();
+        const nowMin = currentHours * 60 + currentMinutes;
+
+        const dashboard = document.getElementById('lunch-dashboard');
+        const nowContainer = document.getElementById('lunch-now-groups');
+        const nextContainer = document.getElementById('lunch-next-groups');
+        const nextTimer = document.getElementById('lunch-next-timer');
+
+        if (!lunchSchedule[currentDay]) {
+            if(dashboard) dashboard.style.display = 'none';
+            return;
+        }
+
+        const todaysLunches = lunchSchedule[currentDay];
+        
+        const nowGroups = [];
+        let nextGroups = [];
+        let nextStartTime = null;
+
+        todaysLunches.forEach(event => {
+            if (nowMin >= event.start && nowMin < event.end) {
+                nowGroups.push(event.group);
+            }
+            if (nowMin < event.start) {
+                if (nextStartTime === null || event.start === nextStartTime) {
+                    nextStartTime = event.start;
+                    nextGroups.push(event.group);
+                }
+            }
+        });
+
+        const timeToNext = nextStartTime ? nextStartTime - nowMin : 9999;
+        // Show if eating NOW, or starts in <= 5 mins
+        const shouldShow = (nowGroups.length > 0) || (timeToNext <= 5);
+
+        if (shouldShow) {
+            dashboard.style.display = 'block';
+            
+            if (nowGroups.length > 0) {
+                nowContainer.textContent = nowGroups.join(', ');
+            } else {
+                nowContainer.textContent = 'Preparing...';
+            }
+
+            if (nextGroups.length > 0 && nextStartTime) {
+                nextContainer.textContent = nextGroups.join(', ');
+                nextTimer.textContent = `Starts in ${timeToNext} min`;
+            } else {
+                nextContainer.textContent = '-';
+                nextTimer.textContent = '';
+            }
+        } else {
+            dashboard.style.display = 'none';
+        }
+    }
+    setInterval(updateLunchDashboard, 5000);
+
+    // --- PART 5: STATUS & MENU (Existing) ---
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
-
     const schedule = {
-        0: [], // Sunday
-        1: [ [11, 0], [13, 45] ], // Monday: 11:00-13:45
-        2: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Tuesday
-        3: [ [9, 0], [13, 45] ], // Wednesday
-        4: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Thursday
-        5: [ [9, 0], [10, 30], [11, 0], [13, 45] ], // Friday
-        6: []  // Saturday
+        0: [], 1: [[11,0],[13,45]], 2: [[9,0],[10,30],[11,0],[13,45]], 
+        3: [[9,0],[13,45]], 4: [[9,0],[10,30],[11,0],[13,45]], 
+        5: [[9,0],[10,30],[11,0],[13,45]], 6: []
     };
 
     function updateLoungeStatus() {
@@ -91,26 +233,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
-    // --- THIS IS THE H/M/S FORMATTING ---
     function formatCountdown(targetTime) {
         const now = new Date();
         const diff = targetTime.getTime() - now.getTime();
-        
         let seconds = Math.max(0, Math.floor(diff / 1000));
         let minutes = Math.floor(seconds / 60);
         let hours = Math.floor(minutes / 60);
-
         seconds = seconds % 60;
         minutes = minutes % 60;
-
         if (hours > 0) {
             return `${String(hours).padStart(2, '0')}H:${String(minutes).padStart(2, '0')}M:${String(seconds).padStart(2, '0')}S`;
         } else {
             return `${String(minutes).padStart(2, '0')}M:${String(seconds).padStart(2, '0')}S`;
         }
     }
-
     function getWeekNumber(d) {
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
@@ -125,14 +261,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('week-number').textContent = currentWeek;
         try {
             const response = await fetch('menu.txt');
-            if (!response.ok) {
-                throw new Error('menu.txt file not found.');
-            }
+            if (!response.ok) { throw new Error('menu.txt file not found.'); }
             const text = await response.text();
             parseMenu(text, currentWeek, currentDayIndex);
         } catch (error) {
             console.error('Error loading menu:', error);
-            document.getElementById('menu-grid').innerHTML = '<p style="color:red; font-size: 1.5em;">Kunde inte ladda menyn. Kontrollera att filen menu.txt finns och har rätt namn.</p>';
+            document.getElementById('menu-grid').innerHTML = '<p style="color:red; font-size: 1.5em;">Kunde inte ladda menyn.</p>';
         }
     }
     function parseMenu(text, currentWeek, currentDayIndex) {
@@ -160,11 +294,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentDayIndex >= 1 && currentDayIndex <= 5) {
             const todayKey = days[currentDayIndex].toLowerCase();
             const todayElement = document.getElementById(`menu-${todayKey}`);
-            if (todayElement) {
-                todayElement.classList.add('today');
-            }
+            if (todayElement) { todayElement.classList.add('today'); }
         }
     }
+
+    // INIT
+    loadLessons(); 
     loadMenu();
     updateLoungeStatus();
     setInterval(updateLoungeStatus, 1000);
