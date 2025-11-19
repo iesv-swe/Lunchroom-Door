@@ -1,77 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Lounge Sign</title>
-    <!-- Version 10 Styles -->
-    <link rel="stylesheet" href="style.css?v=10">
+    <title>Student Lounge Signage v21 (Diagnostic)</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- LOGO BOTTOM LEFT -->
-    <img src="logo.png" alt="School Logo" id="school-logo">
-
-    <div class="container">
-        <div id="status-container">
-            <!-- This ID is used for error reporting -->
-            <h2 id="lounge-status">Laddar...</h2>
-            <p id="lounge-timer"></p>
-        </div>
-
-        <hr>
-
-        <!-- LUNCH DASHBOARD -->
-        <div id="lunch-dashboard">
-            <div class="lunch-row">
-                <div class="lunch-col">
-                    <span class="lunch-label">NOW EATING</span>
-                    <span id="lunch-now-groups" class="lunch-groups">-</span>
-                </div>
-                <div style="border-left: 1px solid #9a9b9d; margin: 0 20px;"></div>
-                <div class="lunch-col">
-                    <span class="lunch-label">UP NEXT</span>
-                    <span id="lunch-next-groups" class="lunch-groups">-</span>
-                    <span id="lunch-next-timer"></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- FOOD MENU -->
-        <div id="menu-container">
-            <h1>Veckans Lunchmeny (Vecka <span id="week-number"></span>)</h1>
-            <div id="menu-grid">
-                <div class="menu-day" id="menu-monday">
-                    <h3>Måndag</h3>
-                    <pre class="menu-content"></pre>
-                </div>
-                <div class="menu-day" id="menu-tuesday">
-                    <h3>Tisdag</h3>
-                    <pre class="menu-content"></pre>
-                </div>
-                <div class="menu-day" id="menu-wednesday">
-                    <h3>Onsdag</h3>
-                    <pre class="menu-content"></pre>
-                </div>
-                <div class="menu-day" id="menu-thursday">
-                    <h3>Torsdag</h3>
-                    <pre class="menu-content"></pre>
-                </div>
-                <div class="menu-day" id="menu-friday">
-                    <h3>Fredag</h3>
-                    <pre class="menu-content"></pre>
-                </div>
-            </div>
-        </div>
+    <div id="loading-screen">
+        <h1>Laddar...</h1>
+        <p id="loading-status">Initierar system...</p>
     </div>
 
-    <!-- CLOCK BOTTOM RIGHT -->
-    <div id="clock-display">
-        <span id="clock-time"></span>
-        <span id="clock-date"></span>
+    <div id="content">
+        </div>
+
+    <img id="logo" src="logo.png" alt="Logo" onerror="this.style.display='none'">
+
+    <div id="clock">00:00</div>
+
+    <div id="debug-console">
+        <h3>System Log v21</h3>
+        <div id="log-entries"></div>
     </div>
 
-    <!-- Script v21 (Diagnostic Mode) -->
-    <script src="script.js?v=21"></script>
+    <script src="script.js"></script>
 </body>
 </html>
