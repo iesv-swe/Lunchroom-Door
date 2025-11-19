@@ -18,21 +18,16 @@ body {
     cursor: none; 
 }
 
-/* --- DEBUG DOT (Remove this section later) --- */
-#debug-dot {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background-color: red; /* Default to Red (Not playing) */
-    z-index: 99999;
-    border: 2px solid white;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+/* --- KIOSK FIXES --- */
+::-webkit-scrollbar {
+    display: none;
+}
+body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
-/* ... (The rest of your CSS remains exactly the same) ... */
+/* Container */
 .container {
     width: 95%;
     max-width: 1400px;
@@ -42,6 +37,7 @@ body {
     flex-grow: 1; 
 }
 
+/* Logo Bottom Left */
 #school-logo {
     position: absolute;
     bottom: 20px;
@@ -51,6 +47,7 @@ body {
     z-index: 100; 
 }
 
+/* Status */
 #lounge-status {
     font-size: 6em;
     font-weight: bold;
@@ -67,6 +64,7 @@ body {
 #lounge-status.open { color: #4CAF50; }
 #lounge-status.closed { color: #F44336; }
 
+/* Lunch Dashboard */
 #lunch-dashboard {
     display: none; 
     margin: 20px auto;
@@ -120,6 +118,7 @@ hr {
     width: 100%;
 }
 
+/* Menu */
 #menu-container h1 { display: none; }
 
 #menu-grid {
@@ -160,6 +159,7 @@ hr {
     margin: 0;
 }
 
+/* Clock Bottom Right */
 #bottom-right-clock {
     position: absolute;
     bottom: 20px;
