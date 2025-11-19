@@ -1,7 +1,6 @@
-// --- v34 LUNCH FILTER UPDATE ---
-// Feature: Excludes 'support' AND 'prao' groups from the lunch dashboard.
-// Fix: Cache-buster remains active to ensure external files load reliably.
-// Feature: Scroll Jiggle Hack (v31) remains active to prevent screen sleep.
+// --- v37 CACHE FIX: Ensures menu.txt is aggressively reloaded ---
+// FIX: The robust cache bypass (cache: 'no-cache') for menu.txt is verified and remains active.
+// FIX: The version number is updated to ensure the browser loads this new script.
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -11,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- PART 1: THE JIGGLE HACK (Keeps screen awake) ---
     function initJiggleHack() {
-        console.log("Activating scroll simulation (v34) to prevent sleep...");
+        console.log("Activating scroll simulation (v37) to prevent sleep...");
 
         function fireScroll() {
             const event = new Event('scroll', {
@@ -104,13 +103,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Update DOM
+        // Update DOM (Now using Swedish text for consistency)
         if (isOpen) {
-            statusElement.textContent = 'The Lounge is OPEN';
+            statusElement.textContent = 'Loungen är ÖPPEN';
             statusElement.className = 'open';
             timerElement.textContent = `Stänger om ${formatCountdown(nextEventTime)}`;
         } else {
-            statusElement.textContent = 'The Lounge is CLOSED';
+            statusElement.textContent = 'Loungen är STÄNGD';
             statusElement.className = 'closed';
             if (nextEventTime) {
                 timerElement.textContent = `Öppnar om ${formatCountdown(nextEventTime)}`;
@@ -145,12 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load Lessons.txt file
     async function safeLoadLessons() {
         try {
-            const now = new Date();
-            // V33 FIX: Add cache-buster to force reload of the external file
-            const cacheBuster = now.getMinutes(); 
-            const response = await fetch(`Lessons.txt?cb=${cacheBuster}`);
+            // Use cache: 'no-cache' for robust reloading
+            const response = await fetch(`Lessons.txt`, { cache: 'no-cache' });
             
-            if (!response.ok) throw new Error('Lessons.txt not found');
+            if (!response.ok) throw new Error('Lessons.txt not found (404/Network Error)');
             const text = await response.text();
             parseLessons(text);
         } catch (error) {
@@ -180,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const startMin = timeToMin(startTimeRaw);
                 const endMin = startMin + parseInt(lengthRaw);
                 
-                // V34: CHECK TO EXCLUDE 'SUPPORT' AND 'PRAO' CLASSES
+                // CHECK TO EXCLUDE 'SUPPORT' AND 'PRAO' CLASSES
                 const normalizedGroup = group ? group.toLowerCase() : '';
                 const isExcluded = normalizedGroup.includes('support') || normalizedGroup.includes('prao');
 
@@ -269,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function getWeekNumber(d) {
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-        var yearStart = new Date(Date.UTC(d.getUTCFullullYear(), 0, 1));
+        var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)); 
         return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     }
 
@@ -279,17 +276,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentWeek = getWeekNumber(today);
             document.getElementById('week-number').textContent = currentWeek;
             
-            const now = new Date();
-            // V33 FIX: Add cache-buster to force reload of the external file
-            const cacheBuster = now.getMinutes(); 
-            const response = await fetch(`menu.txt?cb=${cacheBuster}`);
+            // Use cache: 'no-cache' for robust reloading
+            // This is the line that guarantees a fresh fetch of menu.txt
+            const response = await fetch(`menu.txt`, { cache: 'no-cache' });
             
-            if (!response.ok) throw new Error('menu.txt not found');
+            if (!response.ok) throw new Error('menu.txt not found (404/Network Error)');
             const text = await response.text();
             parseMenu(text, currentWeek, today.getDay());
         } catch (error) {
             console.warn('Menu load failed:', error);
-            document.getElementById('menu-grid').innerHTML = '<p style="color:white; font-size:3em;">❌ Meny kunde inte laddas. Kontrollera filen.</p>';
+            // This is the fallback message in Swedish
+            document.getElementById('menu-grid').innerHTML = 
+                '<p style="color:white; font-size:3em;">❌ Meny kunde inte laddas.</p>' +
+                '<p style="color:#00a0df; font-size:1.5em; margin-top: 10px;">Dubbelkolla att filen heter **menu.txt** och innehåller text för veckan.</p>';
         }
     }
 
@@ -303,11 +302,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         for (const line of lines) {
             const trimmedLine = line.trim();
-            if (trimmedLine.startsWith('[WEEK')) {
+            // Check for week tag, ignores case and trims whitespace
+            if (trimmedLine.toUpperCase().startsWith('[WEEK')) {
                 activeWeek = (trimmedLine.toUpperCase() === weekTag);
-            } else if (activeWeek && trimmedLine.startsWith('[')) {
+            } else if (activeWeek && trimmedLine.startsWith('[') && trimmedLine.endsWith(']')) {
+                // Check for day tag, ignores case and trims whitespace
                 activeDay = trimmedLine.substring(1, trimmedLine.length - 1).toUpperCase();
-            } else if (activeWeek && activeDay && menuData.hasOwnProperty(activeDay) && trimmedLine) {
+            } else if (activeWeek && activeDay && menuData.hasOwnProperty(activeDay) && trimmedLine && !trimmedLine.startsWith('#')) {
+                // Collect menu lines, ignoring empty lines and comments
                 menuData[activeDay] += trimmedLine + '\n';
             }
         }
