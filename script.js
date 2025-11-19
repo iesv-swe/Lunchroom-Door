@@ -1,6 +1,8 @@
-// --- v32 LUNCH FILTER UPDATE ---
-// The Scroll Jiggle Hack (v31) remains active to prevent sleep.
-// NEW: Excludes all classes/groups that contain the word 'support' from the lunch dashboard.
+// --- v33 CACHE-BUSTER FIX & LUNCH FILTER ---
+// Fix: Added dynamic cache-buster query strings to menu.txt and Lessons.txt
+// to solve the issue of the files not loading due to aggressive browser caching.
+// Feature: Scroll Jiggle Hack (v31) remains active to prevent screen sleep.
+// Feature: Excludes 'support' groups from lunch dashboard (v32) remains active.
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -10,17 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- PART 1: THE JIGGLE HACK (Keeps screen awake) ---
     function initJiggleHack() {
-        console.log("Activating scroll simulation (v32) to prevent sleep...");
+        console.log("Activating scroll simulation (v33) to prevent sleep...");
 
         function fireScroll() {
-            // New strategy: Simulate a generic scroll event. 
-            // This event is often more reliable for preventing screen sleep than mouse/key events 
-            // in locked or Kiosk environments.
             const event = new Event('scroll', {
                 bubbles: true, 
                 cancelable: true
             });
-            // Dispatch the event on the document body
             document.body.dispatchEvent(event);
         }
 
@@ -148,7 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load Lessons.txt file
     async function safeLoadLessons() {
         try {
-            const response = await fetch('Lessons.txt');
+            const now = new Date();
+            // V33 FIX: Add cache-buster to force reload of the external file
+            const cacheBuster = now.getMinutes(); 
+            const response = await fetch(`Lessons.txt?cb=${cacheBuster}`);
+            
             if (!response.ok) throw new Error('Lessons.txt not found');
             const text = await response.text();
             parseLessons(text);
@@ -179,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const startMin = timeToMin(startTimeRaw);
                 const endMin = startMin + parseInt(lengthRaw);
                 
-                // --- V32: CHECK TO EXCLUDE 'SUPPORT' CLASSES ---
+                // V32: CHECK TO EXCLUDE 'SUPPORT' CLASSES
                 if (group && !group.toLowerCase().includes('support')) { 
                     lunchSchedule[dayNum].push({ group: group, start: startMin, end: endMin });
                 }
@@ -275,13 +277,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentWeek = getWeekNumber(today);
             document.getElementById('week-number').textContent = currentWeek;
             
-            const response = await fetch('menu.txt');
+            const now = new Date();
+            // V33 FIX: Add cache-buster to force reload of the external file
+            const cacheBuster = now.getMinutes(); 
+            const response = await fetch(`menu.txt?cb=${cacheBuster}`);
+            
             if (!response.ok) throw new Error('menu.txt not found');
             const text = await response.text();
             parseMenu(text, currentWeek, today.getDay());
         } catch (error) {
             console.warn('Menu load failed:', error);
-            document.getElementById('menu-grid').innerHTML = '<p style="color:white">Meny kunde inte laddas.</p>';
+            document.getElementById('menu-grid').innerHTML = '<p style="color:white; font-size:3em;">❌ Meny kunde inte laddas. Kontrollera filen.</p>';
         }
     }
 
