@@ -1,26 +1,36 @@
-// --- v27 AUTO-REFRESH SCRIPT (CLEAN) ---
-// Strategy: Reload page every 5 minutes.
-// Result: Screen stays on. NO White Bar. NO Video Errors. NO Dots.
+// --- v28 MOUSE JIGGLE HACK ---
+// Strategy: Fire fake mouse events every 30 seconds to simulate activity.
+// Result: Should prevent OS sleep without the bar or a reload flicker.
 
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- CONFIGURATION ---
-    // 5 Minutes (300,000ms). 
-    // This resets the Chromebook's sleep timer by simulating a fresh load.
-    const REFRESH_INTERVAL = 300000; 
+    // Fire event every 30 seconds (30,000ms).
+    const JIGGLE_INTERVAL = 30000; 
 
-    // --- PART 1: THE "PULSE" REFRESH ---
-    function initAutoRefresh() {
-        console.log(`System will auto-refresh every ${REFRESH_INTERVAL/1000} seconds.`);
-        
-        setTimeout(() => {
-            console.log('Refreshing page to reset idle timer...');
-            window.location.reload();
-        }, REFRESH_INTERVAL);
+    // --- PART 1: THE JIGGLE HACK ---
+    function initJiggleHack() {
+        console.log("Activating mouse jiggle simulation to prevent sleep...");
+
+        function fireMouseMove() {
+            // Create a custom MouseEvent
+            const event = new MouseEvent('mousemove', {
+                'view': window,
+                'bubbles': true, // Essential: event propagates up the DOM tree
+                'cancelable': true,
+                'screenX': 10, 
+                'screenY': 10
+            });
+            // Dispatch the event on the document body
+            document.body.dispatchEvent(event);
+        }
+
+        // Start the jiggle loop
+        setInterval(fireMouseMove, JIGGLE_INTERVAL);
     }
 
-    // Start the timer
-    initAutoRefresh();
+    // Start the system
+    initJiggleHack();
 
     // --- PART 2: CLOCK (Bottom Right) ---
     function updateClock() {
@@ -118,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLoungeStatus();
     setInterval(updateLoungeStatus, 1000);
 
-    // --- PART 4: FILE LOADING ---
+    // --- PART 4: FILE LOADING (Standard) ---
     
     async function safeLoadLessons() {
         try {
