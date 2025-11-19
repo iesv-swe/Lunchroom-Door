@@ -1,23 +1,37 @@
-// --- v38 RESTORED FILE FETCHING ---
-// Fix: Reverted fetch logic to use query strings ('?t=1234') instead of 
-// {cache: 'no-cache'}, which was likely causing network errors on your server.
-// Feature: Visual Debug added to menu error message (Shows Week #).
+// --- v43 RESTORED LAYOUT ---
+// Style: Reverted CSS to the original spacious design.
+// Features: Wake Lock API, Support/Prao Filters, Query-String Cache Busting.
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- CONFIGURATION ---
-    const JIGGLE_INTERVAL = 30000; 
+    // --- PART 1: OFFICIAL WAKE LOCK API ---
+    let wakeLock = null;
 
-    // --- PART 1: THE JIGGLE HACK ---
-    function initJiggleHack() {
-        console.log("Activating scroll simulation (v38) to prevent sleep...");
-        function fireScroll() {
-            const event = new Event('scroll', { bubbles: true, cancelable: true });
-            document.body.dispatchEvent(event);
+    const requestWakeLock = async () => {
+        try {
+            if ('wakeLock' in navigator) {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log('Wake Lock: ACTIVE');
+                
+                wakeLock.addEventListener('release', () => {
+                    console.log('Wake Lock: RELEASED');
+                    wakeLock = null;
+                });
+            }
+        } catch (err) {
+            console.error(`Wake Lock Error: ${err.name}, ${err.message}`);
         }
-        setInterval(fireScroll, JIGGLE_INTERVAL);
-    }
-    initJiggleHack();
+    };
+
+    // Re-acquire lock only when the screen comes back into view (Visibility Change)
+    document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'visible' && wakeLock === null) {
+            await requestWakeLock();
+        }
+    });
+
+    // Initial Request
+    requestWakeLock();
 
     // --- PART 2: CLOCK ---
     function updateClock() {
@@ -82,17 +96,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
+        // English Status
         if (isOpen) {
-            statusElement.textContent = 'Loungen är ÖPPEN';
+            statusElement.textContent = 'The Lounge is OPEN';
             statusElement.className = 'open';
-            timerElement.textContent = `Stänger om ${formatCountdown(nextEventTime)}`;
+            timerElement.textContent = `Closes in ${formatCountdown(nextEventTime)}`;
         } else {
-            statusElement.textContent = 'Loungen är STÄNGD';
+            statusElement.textContent = 'The Lounge is CLOSED';
             statusElement.className = 'closed';
             if (nextEventTime) {
-                timerElement.textContent = `Öppnar om ${formatCountdown(nextEventTime)}`;
+                timerElement.textContent = `Opens in ${formatCountdown(nextEventTime)}`;
             } else {
-                timerElement.textContent = 'Stängt för helgen';
+                timerElement.textContent = 'Closed for the weekend';
             }
         }
     }
@@ -117,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- PART 4: LUNCH DASHBOARD ---
     async function safeLoadLessons() {
         try {
-            // FIX: Reverted to Query String cache buster (safer for all servers)
             const cb = Date.now();
             const response = await fetch(`Lessons.txt?t=${cb}`);
             
@@ -151,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const startMin = timeToMin(startTimeRaw);
                 const endMin = startMin + parseInt(lengthRaw);
                 
-                // Filter Logic
+                // Filter Logic: Exclude Support and Prao
                 const normalizedGroup = group ? group.toLowerCase() : '';
                 const isExcluded = normalizedGroup.includes('support') || normalizedGroup.includes('prao');
 
@@ -231,7 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function safeLoadMenu() {
-        // FIX: Reverted to Query String cache buster (safer)
         const cb = Date.now();
         const currentWeek = getWeekNumber(new Date());
         document.getElementById('week-number').textContent = currentWeek;
