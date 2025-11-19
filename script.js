@@ -1,19 +1,20 @@
-// --- v27 AUTO-REFRESH SCRIPT ---
-// Strategy: Reload page every 5 minutes to reset OS Idle Timer.
-// Result: Screen stays on. NO White Bar. NO Video Errors.
+// --- v27 AUTO-REFRESH SCRIPT (CLEAN) ---
+// Strategy: Reload page every 5 minutes.
+// Result: Screen stays on. NO White Bar. NO Video Errors. NO Dots.
 
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- CONFIGURATION ---
-    // 5 Minutes (300,000ms). Safe for most Chromebooks (default sleep is usually ~10 mins)
+    // 5 Minutes (300,000ms). 
+    // This resets the Chromebook's sleep timer by simulating a fresh load.
     const REFRESH_INTERVAL = 300000; 
 
     // --- PART 1: THE "PULSE" REFRESH ---
     function initAutoRefresh() {
-        console.log(`System will auto-refresh every ${REFRESH_INTERVAL/1000} seconds to prevent sleep.`);
+        console.log(`System will auto-refresh every ${REFRESH_INTERVAL/1000} seconds.`);
         
         setTimeout(() => {
-            console.log('Refeshing page to reset idle timer...');
+            console.log('Refreshing page to reset idle timer...');
             window.location.reload();
         }, REFRESH_INTERVAL);
     }
@@ -117,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLoungeStatus();
     setInterval(updateLoungeStatus, 1000);
 
-    // --- PART 4: FILE LOADING (Standard) ---
+    // --- PART 4: FILE LOADING ---
     
     async function safeLoadLessons() {
         try {
