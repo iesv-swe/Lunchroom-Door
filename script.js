@@ -1,8 +1,7 @@
-// --- v33 CACHE-BUSTER FIX & LUNCH FILTER ---
-// Fix: Added dynamic cache-buster query strings to menu.txt and Lessons.txt
-// to solve the issue of the files not loading due to aggressive browser caching.
+// --- v34 LUNCH FILTER UPDATE ---
+// Feature: Excludes 'support' AND 'prao' groups from the lunch dashboard.
+// Fix: Cache-buster remains active to ensure external files load reliably.
 // Feature: Scroll Jiggle Hack (v31) remains active to prevent screen sleep.
-// Feature: Excludes 'support' groups from lunch dashboard (v32) remains active.
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -12,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- PART 1: THE JIGGLE HACK (Keeps screen awake) ---
     function initJiggleHack() {
-        console.log("Activating scroll simulation (v33) to prevent sleep...");
+        console.log("Activating scroll simulation (v34) to prevent sleep...");
 
         function fireScroll() {
             const event = new Event('scroll', {
@@ -181,8 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const startMin = timeToMin(startTimeRaw);
                 const endMin = startMin + parseInt(lengthRaw);
                 
-                // V32: CHECK TO EXCLUDE 'SUPPORT' CLASSES
-                if (group && !group.toLowerCase().includes('support')) { 
+                // V34: CHECK TO EXCLUDE 'SUPPORT' AND 'PRAO' CLASSES
+                const normalizedGroup = group ? group.toLowerCase() : '';
+                const isExcluded = normalizedGroup.includes('support') || normalizedGroup.includes('prao');
+
+                if (group && !isExcluded) { 
                     lunchSchedule[dayNum].push({ group: group, start: startMin, end: endMin });
                 }
             }
