@@ -6,11 +6,12 @@ body {
     padding: 20px;
     height: 100vh;
     box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-    text-align: center;
+    display: flex; /* Keep flexbox for main content */
+    flex-direction: column; /* Stack children vertically */
+    align-items: center; /* Center main container horizontally */
     position: relative; 
-    overflow: hidden; /* Added to prevent scrollbars on Kiosk */
+    overflow: hidden;
+    /* Removed text-align: center; justify-content: center; from body */
 }
 
 .container {
@@ -18,13 +19,19 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     padding-bottom: 150px; 
+    /* The container itself will be centered by body's align-items: center */
+    text-align: center; /* Re-apply text-align for content within the container */
 }
 
-/* --- LOGO STYLING --- */
+/* --- LOGO STYLING (MOVED TO BOTTOM LEFT) --- */
 #school-logo {
+    position: absolute; /* Position relative to body */
+    bottom: 20px;
+    left: 20px;
     max-height: 120px;
     width: auto;
-    margin-bottom: 20px;
+    z-index: 100; /* Ensure it's above other elements if needed */
+    /* Removed margin-bottom */
 }
 
 /* --- STATUS STYLING --- */
@@ -47,7 +54,7 @@ body {
 
 /* --- LUNCH DASHBOARD (Now/Next) --- */
 #lunch-dashboard {
-    display: none; /* Hidden by default */
+    display: none; 
     margin: 20px auto;
     width: 90%;
     max-width: 1000px;
@@ -86,7 +93,7 @@ body {
 
 #lunch-next-timer {
     font-size: 1.2em;
-    color: #F44336; /* Red countdown */
+    color: #F44336; 
     font-weight: bold;
     display: block;
     margin-top: 5px;
@@ -139,7 +146,7 @@ hr {
     margin: 0;
 }
 
-/* --- CLOCK (Bottom Center) --- */
+/* --- CLOCK (Bottom Center - NO CHANGE) --- */
 #clock-display {
     position: absolute;
     bottom: 20px;
