@@ -1,8 +1,8 @@
 /* Basic setup */
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #102d69;
-    color: #dbdad8;
+    background-color: #102d69; /* Dark Blue */
+    color: #dbdad8; /* Off-White */
     padding: 20px;
     margin: 0;
     height: 100vh;
@@ -14,20 +14,21 @@ body {
     position: relative; 
     overflow: hidden;
     
-    /* Hide Mouse Cursor */
+    /* Hide Mouse Cursor for Kiosk Mode */
     cursor: none; 
 }
 
 /* --- KIOSK FIXES --- */
+/* Hide scrollbars */
 ::-webkit-scrollbar {
     display: none;
 }
 body {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
 }
 
-/* Container */
+/* Container for main content */
 .container {
     width: 95%;
     max-width: 1400px;
@@ -47,7 +48,7 @@ body {
     z-index: 100; 
 }
 
-/* Status */
+/* Status Section */
 #lounge-status {
     font-size: 6em;
     font-weight: bold;
@@ -61,17 +62,17 @@ body {
     margin-top: 10px;
 }
 
-#lounge-status.open { color: #4CAF50; }
-#lounge-status.closed { color: #F44336; }
+#lounge-status.open { color: #4CAF50; /* Green */ }
+#lounge-status.closed { color: #F44336; /* Red */ }
 
 /* Lunch Dashboard */
 #lunch-dashboard {
-    display: none; 
+    display: none; /* Hidden by default, shown by script */
     margin: 20px auto;
     width: 90%;
     max-width: 1000px;
     background-color: #1f408a;
-    border: 2px solid #00a0df;
+    border: 2px solid #00a0df; /* Blue border */
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
@@ -105,21 +106,27 @@ body {
 
 #lunch-next-timer {
     font-size: 1.2em;
-    color: #F44336; 
+    color: #F44336; /* Red timer text */
     font-weight: bold;
     display: block;
     margin-top: 5px;
 }
 
-hr {
-    display: none; 
+#divider-bar {
+    display: none; /* Hidden by default, shown with dashboard */
     border: 1px solid #9a9b9d;
     margin: 40px 0;
     width: 100%;
 }
 
-/* Menu */
-#menu-container h1 { display: none; }
+/* Menu Display */
+#menu-container h1 { 
+    font-size: 2.5em;
+    color: #00a0df;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: none; /* Hiding main title as requested by user feedback */
+}
 
 #menu-grid {
     display: flex;
@@ -127,7 +134,7 @@ hr {
 }
 
 .menu-day {
-    display: none; 
+    display: none; /* All days hidden by default, script shows only 'today' */
     background-color: #1f408a;
     border-radius: 8px;
     padding: 20px;
@@ -137,7 +144,7 @@ hr {
 }
 
 .menu-day.today {
-    display: block;
+    display: block; /* Only today's menu is shown */
     border: 3px solid #00a0df;
     background-color: rgba(0, 160, 223, 0.1);
 }
@@ -155,7 +162,7 @@ hr {
     line-height: 1.4;
     color: #dbdad8;
     text-align: left;
-    white-space: pre-wrap;
+    white-space: pre-wrap; /* Preserves formatting from the menu.txt file */
     margin: 0;
 }
 
