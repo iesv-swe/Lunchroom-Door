@@ -1,30 +1,62 @@
-// --- v23 BULLETPROOF SCRIPT ---
-// Fix: Decouples File Loading from Status Updates
-// Fix: Error Reporting on Screen (No more hanging)
+// --- v25-TEST (Video Hack + Visual Debugger) ---
 
 document.addEventListener('DOMContentLoaded', () => {
     
     // --- GLOBAL ERROR HANDLER ---
-    // If the script crashes, this prints the error to the screen
-    // instead of hanging on "Laddar..."
-    window.onerror = function(message, source, lineno, colno, error) {
+    window.onerror = function(message) {
         console.error("Global Error:", message);
-        const statusEl = document.getElementById('lounge-status');
-        if(statusEl) {
-            statusEl.innerHTML = "SYSTEM ERROR";
-            statusEl.style.color = "red";
-            statusEl.style.fontSize = "3em";
-            
-            const timerEl = document.getElementById('lounge-timer');
-            if(timerEl) {
-                timerEl.textContent = message; // Shows the actual error text
-                timerEl.style.fontSize = "1.5em";
-            }
-        }
     };
 
-    // --- PART 1: CLOCK (Bottom Right) ---
-    // Runs immediately, independent of files
+    // --- PART 1: VIDEO WAKE LOCK WITH DEBUG DOT ---
+    function initVideoWakeLock() {
+        console.log('Initializing Video Wake Lock...');
+        
+        // 1. Create Visual Debug Dot
+        const dot = document.createElement('div');
+        dot.id = 'debug-dot';
+        document.body.appendChild(dot); // Adds Red dot to screen
+        
+        // 2. Create Invisible Video
+        const video = document.createElement('video');
+        // 2-second black video (WebM)
+        video.src = "data:video/webm;base64,GkXfo0AgQoaBAUL3gQFC8oEEQvOBCEKCQAR3ZWJtQoeBAkKFgQIYU4BnQI0VSalmRBfXR7429u327mzhPmC1iU3RqnCPQ4KBAcWCVQRfn0J1dt5iQP1i141hQA==";
+        
+        video.playsInline = true;
+        video.loop = true;
+        video.muted = true; // CRITICAL for Autoplay on Kiosk
+        
+        // Hide the video visually
+        video.style.position = 'fixed';
+        video.style.top = '0';
+        video.style.left = '0';
+        video.style.width = '1px';
+        video.style.height = '1px';
+        video.style.opacity = '0.01';
+        video.style.pointerEvents = 'none';
+        video.style.zIndex = '-9999'; 
+
+        document.body.appendChild(video);
+
+        // 3. Attempt Play
+        const playPromise = video.play();
+
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                // Success!
+                console.log('Wake Lock: Video is playing.');
+                dot.style.backgroundColor = '#00ff00'; // GREEN = GOOD
+            }).catch(error => {
+                // Fail!
+                console.warn('Wake Lock: Autoplay prevented.', error);
+                dot.style.backgroundColor = 'orange'; // ORANGE = FAILED
+            });
+        }
+    }
+
+    // Start immediately
+    initVideoWakeLock();
+
+    // --- PART 2: CLOCK (Bottom Right) ---
     function updateClock() {
         const now = new Date();
         const timeString = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
@@ -34,8 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateClock, 1000);
     updateClock(); 
 
-    // --- PART 2: STATUS & MENU ---
-    // Runs immediately, independent of files
+    // --- PART 3: STATUS & MENU ---
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
     
@@ -48,9 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateLoungeStatus() {
         const now = new Date();
         const currentDay = now.getDay();
-        const currentHours = now.getHours();
-        const currentMinutes = now.getMinutes();
-        const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+        const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
         const daySchedule = schedule[currentDay];
         let isOpen = false;
         let nextEventTime = null;
@@ -120,32 +149,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Start Status Update Loop
     updateLoungeStatus();
     setInterval(updateLoungeStatus, 1000);
 
-    // --- PART 3: WAKE LOCK (Delayed) ---
-    setTimeout(() => {
-        const managePower = async () => {
-            const now = new Date();
-            const currentHour = now.getHours();
-            const isBusinessHours = currentHour >= 6 && currentHour < 18;
-
-            if (isBusinessHours) {
-                if ('wakeLock' in navigator) {
-                    try {
-                        await navigator.wakeLock.request('screen');
-                        console.log('Wake Lock ACTIVE');
-                    } catch (err) { console.error('Wake Lock failed:', err); }
-                }
-            }
-        };
-        managePower();
-        setInterval(managePower, 60000);
-    }, 5000); 
-
-    // --- PART 4: FILE LOADING (Safe Mode) ---
-    // These function calls are now protected so they don't stop the script if they fail
+    // --- PART 4: FILE LOADING (Decoupled) ---
     
     async function safeLoadLessons() {
         try {
@@ -155,7 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
             parseLessons(text);
         } catch (error) {
             console.warn('Lesson load failed, hiding dashboard:', error);
-            // Do NOT crash the app, just hide the dashboard
             const dashboard = document.getElementById('lunch-dashboard');
             if(dashboard) dashboard.style.display = 'none';
         }
@@ -163,7 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let lunchSchedule = {};
     function parseLessons(text) {
-        // ... (Same parser logic as before) ...
         const lines = text.split('\n');
         const dayMap = { 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thur': 4, 'Fri': 5, 'Sat': 6, 'Sun': 0 };
         lunchSchedule = { 1: [], 2: [], 3: [], 4: [], 5: [] };
@@ -196,12 +201,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateLunchDashboard() {
-        // ... (Same dashboard logic as before) ...
         const now = new Date();
         const currentDay = now.getDay();
         const nowMin = now.getHours() * 60 + now.getMinutes();
         const dashboard = document.getElementById('lunch-dashboard');
-        if (!lunchSchedule[currentDay]) { if(dashboard) dashboard.style.display = 'none'; return; }
+        const divider = document.getElementById('divider-bar'); 
+
+        if (!lunchSchedule[currentDay]) { 
+            if(dashboard) dashboard.style.display = 'none'; 
+            if(divider) divider.style.display = 'none';
+            return; 
+        }
 
         const todaysLunches = lunchSchedule[currentDay];
         const nowGroups = [];
@@ -223,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (shouldShow && dashboard) {
             dashboard.style.display = 'block';
+            if(divider) divider.style.display = 'block'; 
             document.getElementById('lunch-now-groups').textContent = nowGroups.length > 0 ? nowGroups.join(', ') : 'Förbereder...';
             if (nextGroups.length > 0 && nextStartTime) {
                 document.getElementById('lunch-next-groups').textContent = nextGroups.join(', ');
@@ -233,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else if (dashboard) {
             dashboard.style.display = 'none';
+            if(divider) divider.style.display = 'none'; 
         }
     }
     setInterval(updateLunchDashboard, 5000);
@@ -262,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function parseMenu(text, currentWeek, currentDayIndex) {
-        // ... (Same menu parser) ...
         const lines = text.split('\n');
         let activeWeek = false;
         let activeDay = '';
@@ -292,8 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- EXECUTE SAFE LOADERS ---
     safeLoadLessons();
     safeLoadMenu();
-
 });
