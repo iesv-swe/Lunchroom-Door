@@ -1,5 +1,5 @@
 // --- RESTORED SCRIPT (Based on v19) ---
-// Feature: Clock Bottom Center
+// Feature: Logo Bottom Left, Clock Bottom Right (Time Only)
 // Feature: Lunch Dashboard (Only shows "Lunch" subjects)
 // Feature: Smart Wake Lock (Business Hours) with 5s Safety Delay
 
@@ -35,36 +35,29 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(managePower, 60000);
     }, 5000); // <--- 5 second delay added here
 
-    // --- PART 2: CLOCK & DATE ---
+    // --- PART 2: CLOCK (Bottom Right) ---
     function updateClock() {
         const now = new Date();
-        const dateString = now.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' });
+        // Only show time for the bottom-right clock
         const timeString = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
         
-        const formattedDate = dateString.charAt(0).toUpperCase() + dateString.slice(1);
-
-        const timeEl = document.getElementById('clock-time');
-        const dateEl = document.getElementById('clock-date');
-        
-        if (timeEl) timeEl.textContent = timeString;
-        if (dateEl) dateEl.textContent = formattedDate;
+        const bottomRightClockEl = document.getElementById('bottom-right-clock');
+        if (bottomRightClockEl) bottomRightClockEl.textContent = timeString;
     }
     setInterval(updateClock, 1000);
-    updateClock();
+    updateClock(); // Initial call to display immediately
 
     // --- PART 3: LUNCH SCHEDULE PARSER ---
     let lunchSchedule = {};
 
     async function loadLessons() {
         try {
-            // Note: Case Sensitive! Ensure file is named 'Lessons.txt'
             const response = await fetch('Lessons.txt');
             if (!response.ok) throw new Error('Lessons.txt not found');
             const text = await response.text();
             parseLessons(text);
         } catch (error) {
             console.error('Error loading lessons:', error);
-            // We do not show an error on screen, we just hide the lunch dashboard
             const dashboard = document.getElementById('lunch-dashboard');
             if(dashboard) dashboard.style.display = 'none';
         }
@@ -85,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const lengthRaw = cols[4];
             const group = cols[6];
 
-            // FILTER: ONLY SHOW SUBJECTS CONTAINING "Lunch"
             if (subject && subject.includes('Lunch') && dayMap[dayStr]) {
                 const dayNum = dayMap[dayStr];
                 const startMin = timeToMin(startTimeRaw);
@@ -151,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const timeToNext = nextStartTime ? nextStartTime - nowMin : 9999;
-        // Show if eating NOW, or starts in <= 5 mins
         const shouldShow = (nowGroups.length > 0) || (timeToNext <= 5);
 
         if (shouldShow) {
@@ -180,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
     
-    // Schedule (Format: [OpenHour, OpenMin], [CloseHour, CloseMin])
     const schedule = {
         0: [], 1: [[11,0],[13,45]], 2: [[9,0],[10,30],[11,0],[13,45]], 
         3: [[9,0],[13,45]], 4: [[9,0],[10,30],[11,0],[13,45]], 
@@ -197,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let isOpen = false;
         let nextEventTime = null;
         
-        // Determine Open/Closed Status
         for (let i = 0; i < daySchedule.length; i += 2) {
             const openTime = daySchedule[i][0] * 60 + daySchedule[i][1];
             const closeTime = daySchedule[i + 1][0] * 60 + daySchedule[i + 1][1];
@@ -233,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Update DOM
         if (isOpen) {
             statusElement.textContent = 'The Lounge is OPEN';
             statusElement.className = 'open';
