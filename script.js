@@ -1,40 +1,44 @@
-// --- v25-TEST (Video Hack + Visual Debugger) ---
+// --- v26 HYBRID SCRIPT ---
+// Strategy: Try MP4 Video (No Bar). If fails, fallback to API (White Bar).
+// Goal: 100% Uptime Guarantee.
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- GLOBAL ERROR HANDLER ---
-    window.onerror = function(message) {
-        console.error("Global Error:", message);
-    };
+    // --- CONFIG ---
+    const ENABLE_DEBUG_DOT = true; // Set to false to hide the dot once verified
 
-    // --- PART 1: VIDEO WAKE LOCK WITH DEBUG DOT ---
-    function initVideoWakeLock() {
-        console.log('Initializing Video Wake Lock...');
+    // --- GLOBAL ERROR HANDLER ---
+    window.onerror = function(message) { console.error("Global Error:", message); };
+
+    // --- PART 1: VIDEO WAKE LOCK (Attempt 1 - The "Silent" Way) ---
+    function initWakeLockSystem() {
+        console.log('Initializing Wake Lock System...');
         
-        // 1. Create Visual Debug Dot
-        const dot = document.createElement('div');
-        dot.id = 'debug-dot';
-        document.body.appendChild(dot); // Adds Red dot to screen
-        
-        // 2. Create Invisible Video
+        // 1. Setup Debug Dot
+        let dot = null;
+        if (ENABLE_DEBUG_DOT) {
+            dot = document.createElement('div');
+            dot.id = 'debug-dot';
+            // Style is handled in CSS
+            document.body.appendChild(dot); 
+        }
+
+        // 2. Create Invisible Video (MP4 format this time)
         const video = document.createElement('video');
-        // 2-second black video (WebM)
-        video.src = "data:video/webm;base64,GkXfo0AgQoaBAUL3gQFC8oEEQvOBCEKCQAR3ZWJtQoeBAkKFgQIYU4BnQI0VSalmRBfXR7429u327mzhPmC1iU3RqnCPQ4KBAcWCVQRfn0J1dt5iQP1i141hQA==";
+        
+        // Tiny 1x1 pixel MP4 (More compatible than WebM)
+        video.src = "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMQAAAAAmo21vb3YAAABsbXZoAAAAAAAAAAEABgAAAAABAAABAAAAAQAAAAAAAAAZdHJhawAAAFx0a2hkAAAAAQAAAAEAAAAAAAAAAAAAAQAAAAAAAAABAAAAAAABAAAAAQAAAAAAAgAAABBtZGlhAAAAIG1kaGQAAAAAAAAAAQAAAAEAAAAAAAEAAAAAAQAAAAAAIWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAAB2aWRlAAAAAG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAA5zdGJsAAAACmN0dHMAAAAAAAAMc3RzZAAAAAAAAAABAAAANGF2YzEAAAAAAAAAAQABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAQAAAAAAAABhYXZjQwAAAAAACEBzdHNjAAAAAAAAAAEAAAABAAAAAQAAAAEAAAAQc3RzegAAAAAAAAABAAAAFHN0Y28AAAAAAAAAAQAAAAwAAAAYbWRhdAAAAAAAAAAB";
         
         video.playsInline = true;
         video.loop = true;
-        video.muted = true; // CRITICAL for Autoplay on Kiosk
+        video.muted = true; // Critical
         
-        // Hide the video visually
+        // Visual Hiding
         video.style.position = 'fixed';
-        video.style.top = '0';
-        video.style.left = '0';
-        video.style.width = '1px';
-        video.style.height = '1px';
+        video.style.zIndex = '-9999';
         video.style.opacity = '0.01';
         video.style.pointerEvents = 'none';
-        video.style.zIndex = '-9999'; 
-
+        
         document.body.appendChild(video);
 
         // 3. Attempt Play
@@ -42,19 +46,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (playPromise !== undefined) {
             playPromise.then(() => {
-                // Success!
-                console.log('Wake Lock: Video is playing.');
-                dot.style.backgroundColor = '#00ff00'; // GREEN = GOOD
+                // --- SUCCESS (Green Dot) ---
+                console.log('SUCCESS: MP4 Video playing. Screen locked via Video Hack.');
+                if(dot) dot.style.backgroundColor = '#00ff00'; // Green
+                // We do NOT activate the API lock here, so No White Bar!
             }).catch(error => {
-                // Fail!
-                console.warn('Wake Lock: Autoplay prevented.', error);
-                dot.style.backgroundColor = 'orange'; // ORANGE = FAILED
+                // --- FAILURE (Orange Dot) -> ACTIVATE FALLBACK ---
+                console.warn('WARNING: Video Autoplay failed. Switching to API Backup.', error);
+                if(dot) dot.style.backgroundColor = 'orange'; // Orange
+                
+                // ACTIVATE BACKUP (The Standard Wake Lock)
+                activateBackupWakeLock();
             });
         }
     }
 
-    // Start immediately
-    initVideoWakeLock();
+    // --- BACKUP: STANDARD API WAKE LOCK (If video fails) ---
+    let apiWakeLock = null;
+    async function activateBackupWakeLock() {
+        console.log('Activating Backup API Wake Lock...');
+        try {
+            if ('wakeLock' in navigator) {
+                apiWakeLock = await navigator.wakeLock.request('screen');
+                console.log('Backup Lock: ACTIVE');
+                
+                // Re-acquire on visibility change
+                document.addEventListener('visibilitychange', async () => {
+                    if (document.visibilityState === 'visible' && apiWakeLock === null) {
+                        apiWakeLock = await navigator.wakeLock.request('screen');
+                    }
+                });
+            }
+        } catch (err) {
+            console.error('Backup Lock Failed:', err);
+            // If dot exists, turn it RED to show total failure
+            const dot = document.getElementById('debug-dot');
+            if(dot) dot.style.backgroundColor = 'red'; 
+        }
+    }
+
+    // Start the System
+    initWakeLockSystem();
+
 
     // --- PART 2: CLOCK (Bottom Right) ---
     function updateClock() {
@@ -152,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLoungeStatus();
     setInterval(updateLoungeStatus, 1000);
 
-    // --- PART 4: FILE LOADING (Decoupled) ---
+    // --- PART 4: FILE LOADING ---
     
     async function safeLoadLessons() {
         try {
