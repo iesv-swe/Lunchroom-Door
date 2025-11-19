@@ -1,6 +1,7 @@
-// --- v28 MOUSE JIGGLE HACK ---
+// --- v29 MOUSE JIGGLE HACK (WITH REDUNDANCY FIX) ---
 // Strategy: Fire fake mouse events every 30 seconds to simulate activity.
-// Result: Should prevent OS sleep without the bar or a reload flicker.
+// Result: Prevents OS sleep (no bar, no dot, no flicker).
+// Fix: Groups currently eating are filtered out of the 'Next Group' display.
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -8,9 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fire event every 30 seconds (30,000ms).
     const JIGGLE_INTERVAL = 30000; 
 
-    // --- PART 1: THE JIGGLE HACK ---
+    // --- PART 1: THE JIGGLE HACK (Keeps screen awake) ---
     function initJiggleHack() {
-        console.log("Activating mouse jiggle simulation to prevent sleep...");
+        console.log("Activating mouse jiggle simulation (v29) to prevent sleep...");
 
         function fireMouseMove() {
             // Create a custom MouseEvent
@@ -35,21 +36,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- PART 2: CLOCK (Bottom Right) ---
     function updateClock() {
         const now = new Date();
+        // Uses Swedish locale format for time (HH:MM)
         const timeString = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
         const clockEl = document.getElementById('bottom-right-clock');
         if (clockEl) clockEl.textContent = timeString;
     }
+    // Update every second
     setInterval(updateClock, 1000);
     updateClock(); 
 
-    // --- PART 3: STATUS & MENU ---
+    // --- PART 3: LOUNGE OPEN/CLOSED STATUS ---
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
     
+    // Day schedules (Day: 0=Sunday, 1=Monday, ..., 5=Friday, 6=Saturday)
+    // Times are [OpenHour, OpenMinute], [CloseHour, CloseMinute]
     const schedule = {
-        0: [], 1: [[11,0],[13,45]], 2: [[9,0],[10,30],[11,0],[13,45]], 
-        3: [[9,0],[13,45]], 4: [[9,0],[10,30],[11,0],[13,45]], 
-        5: [[9,0],[10,30],[11,0],[13,45]], 6: []
+        0: [], // Sunday
+        1: [[11,0],[13,45]], // Monday
+        2: [[9,0],[10,30],[11,0],[13,45]], // Tuesday
+        3: [[9,0],[13,45]], // Wednesday
+        4: [[9,0],[10,30],[11,0],[13,45]], // Thursday
+        5: [[9,0],[10,30],[11,0],[13,45]], // Friday
+        6: [] // Saturday
     };
 
     function updateLoungeStatus() {
@@ -60,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let isOpen = false;
         let nextEventTime = null;
         
+        // 1. Check if currently open and find the next closing time
         for (let i = 0; i < daySchedule.length; i += 2) {
             const openTime = daySchedule[i][0] * 60 + daySchedule[i][1];
             const closeTime = daySchedule[i + 1][0] * 60 + daySchedule[i + 1][1];
@@ -70,6 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             }
         }
+        
+        // 2. If closed, find the next opening time for the current day
         if (!isOpen) {
             for (let i = 0; i < daySchedule.length; i += 2) {
                 const openTime = daySchedule[i][0] * 60 + daySchedule[i][1];
@@ -80,6 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+        
+        // 3. If no more events today, find the next opening time on a subsequent day
         if (nextEventTime === null) {
             let nextDay = (currentDay + 1) % 7;
             let daysToAdd = 1;
@@ -95,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
+        // Update DOM
         if (isOpen) {
             statusElement.textContent = 'The Lounge is OPEN';
             statusElement.className = 'open';
@@ -110,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // Helper function to format the countdown time
     function formatCountdown(targetTime) {
         const now = new Date();
         const diff = targetTime.getTime() - now.getTime();
@@ -118,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let hours = Math.floor(minutes / 60);
         seconds = seconds % 60;
         minutes = minutes % 60;
+        
         if (hours > 0) {
             return `${String(hours).padStart(2, '0')}H:${String(minutes).padStart(2, '0')}M:${String(seconds).padStart(2, '0')}S`;
         } else {
@@ -128,8 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLoungeStatus();
     setInterval(updateLoungeStatus, 1000);
 
-    // --- PART 4: FILE LOADING (Standard) ---
+    // --- PART 4: LUNCH DASHBOARD (Based on Lessons.txt) ---
     
+    // Load Lessons.txt file
     async function safeLoadLessons() {
         try {
             const response = await fetch('Lessons.txt');
@@ -147,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function parseLessons(text) {
         const lines = text.split('\n');
         const dayMap = { 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thur': 4, 'Fri': 5, 'Sat': 6, 'Sun': 0 };
-        lunchSchedule = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+        lunchSchedule = { 1: [], 2: [], 3: [], 4: [], 5: [] }; // Only Mon-Fri
 
         lines.forEach(line => {
             const cols = line.split('\t');
@@ -158,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const lengthRaw = cols[4];
             const group = cols[6];
 
-            if (subject && subject.includes('Lunch') && dayMap[dayStr]) {
+            if (subject && subject.includes('Lunch') && dayMap[dayStr] >= 1 && dayMap[dayStr] <= 5) {
                 const dayNum = dayMap[dayStr];
                 const startMin = timeToMin(startTimeRaw);
                 const endMin = startMin + parseInt(lengthRaw);
@@ -167,10 +185,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+        // Sorts lunch events by start time
         for (let d in lunchSchedule) lunchSchedule[d].sort((a, b) => a.start - b.start);
         updateLunchDashboard();
     }
 
+    // Helper to convert HHMM to minutes since midnight
     function timeToMin(timeStr) {
         const t = parseInt(timeStr);
         return Math.floor(t / 100) * 60 + (t % 100);
@@ -183,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dashboard = document.getElementById('lunch-dashboard');
         const divider = document.getElementById('divider-bar'); 
 
+        // Hide dashboard if it's weekend
         if (!lunchSchedule[currentDay]) { 
             if(dashboard) dashboard.style.display = 'none'; 
             if(divider) divider.style.display = 'none';
@@ -195,7 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let nextStartTime = null;
 
         todaysLunches.forEach(event => {
+            // Check groups having lunch NOW
             if (nowMin >= event.start && nowMin < event.end) nowGroups.push(event.group);
+            
+            // Check groups having lunch NEXT
             if (nowMin < event.start) {
                 if (nextStartTime === null || event.start === nextStartTime) {
                     nextStartTime = event.start;
@@ -204,15 +228,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // --- FIX V29: Remove groups currently eating (nowGroups) from the "Next" list (nextGroups) ---
+        const nowGroupSet = new Set(nowGroups);
+        const filteredNextGroups = nextGroups.filter(group => !nowGroupSet.has(group));
+        // ---------------------------------------------------------------------------------------------
+
         const timeToNext = nextStartTime ? nextStartTime - nowMin : 9999;
+        // Show dashboard if lunch is happening now, or if the next lunch is within 5 minutes
         const shouldShow = (nowGroups.length > 0) || (timeToNext <= 5);
 
         if (shouldShow && dashboard) {
             dashboard.style.display = 'block';
             if(divider) divider.style.display = 'block'; 
+            
+            // Display 'NOW' groups
             document.getElementById('lunch-now-groups').textContent = nowGroups.length > 0 ? nowGroups.join(', ') : 'Förbereder...';
-            if (nextGroups.length > 0 && nextStartTime) {
-                document.getElementById('lunch-next-groups').textContent = nextGroups.join(', ');
+            
+            // Display 'NEXT' groups (using filtered list)
+            if (filteredNextGroups.length > 0 && nextStartTime) { 
+                document.getElementById('lunch-next-groups').textContent = filteredNextGroups.join(', ');
                 document.getElementById('lunch-next-timer').textContent = `Startar om ${timeToNext} min`;
             } else {
                 document.getElementById('lunch-next-groups').textContent = '-';
@@ -223,9 +257,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if(divider) divider.style.display = 'none'; 
         }
     }
+    // Update dashboard every 5 seconds
     setInterval(updateLunchDashboard, 5000);
 
-    // Helper for Menu
+    // --- PART 5: MENU (Based on menu.txt) ---
+
+    // Helper for Menu to get ISO week number
     function getWeekNumber(d) {
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
@@ -267,11 +304,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 menuData[activeDay] += trimmedLine + '\n';
             }
         }
+        
+        // Populate menu content
         document.querySelector('#menu-monday .menu-content').textContent = menuData.MONDAY || 'Meny saknas';
         document.querySelector('#menu-tuesday .menu-content').textContent = menuData.TUESDAY || 'Meny saknas';
         document.querySelector('#menu-wednesday .menu-content').textContent = menuData.WEDNESDAY || 'Meny saknas';
         document.querySelector('#menu-thursday .menu-content').textContent = menuData.THURSDAY || 'Meny saknas';
         document.querySelector('#menu-friday .menu-content').textContent = menuData.FRIDAY || 'Meny saknas';
+        
+        // Highlight today's menu
         if (currentDayIndex >= 1 && currentDayIndex <= 5) {
             const todayKey = days[currentDayIndex].toLowerCase();
             const el = document.getElementById(`menu-${todayKey}`);
