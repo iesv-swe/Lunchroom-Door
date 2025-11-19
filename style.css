@@ -6,32 +6,31 @@ body {
     padding: 20px;
     height: 100vh;
     box-sizing: border-box;
-    display: flex; /* Keep flexbox for main content */
-    flex-direction: column; /* Stack children vertically */
-    align-items: center; /* Center main container horizontally */
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
     position: relative; 
     overflow: hidden;
-    /* Removed text-align: center; justify-content: center; from body */
 }
 
 .container {
     width: 95%;
     max-width: 1400px;
     margin: 0 auto;
-    padding-bottom: 150px; 
-    /* The container itself will be centered by body's align-items: center */
-    text-align: center; /* Re-apply text-align for content within the container */
+    /* Adjusted padding as the logo is no longer in the container bottom */
+    padding-bottom: 20px; 
+    text-align: center; 
+    flex-grow: 1; /* Allow container to grow and push elements down */
 }
 
-/* --- LOGO STYLING (MOVED TO BOTTOM LEFT) --- */
+/* --- LOGO STYLING (BOTTOM LEFT) --- */
 #school-logo {
-    position: absolute; /* Position relative to body */
+    position: absolute;
     bottom: 20px;
     left: 20px;
     max-height: 120px;
     width: auto;
-    z-index: 100; /* Ensure it's above other elements if needed */
-    /* Removed margin-bottom */
+    z-index: 100; 
 }
 
 /* --- STATUS STYLING --- */
@@ -146,26 +145,16 @@ hr {
     margin: 0;
 }
 
-/* --- CLOCK (Bottom Center - NO CHANGE) --- */
-#clock-display {
+/* --- BOTTOM RIGHT CLOCK --- */
+#bottom-right-clock {
     position: absolute;
     bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    color: #dbdad8;
-    line-height: 1.2;
-}
-
-#clock-time {
-    font-size: 4em;
+    right: 20px;
+    font-size: 4em; /* Adjust size as needed */
     font-weight: bold;
     color: white;
-    display: block;
+    z-index: 100;
 }
 
-#clock-date {
-    font-size: 1.5em;
-    color: #9a9b9d;
-    display: block;
-}
+/* Removed old #clock-display styling */
+/* Removed #clock-time and #clock-date styling */
