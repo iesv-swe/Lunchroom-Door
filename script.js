@@ -1,36 +1,43 @@
 /**
- * Diagnostic Script v21
- * Feature: 5s Wake Lock Delay, Error Logging, Clock, Logo
+ * Diagnostic Script v21-B (BYPASS MODE)
+ * Ignores external files to test screen rendering and Wake Lock
  */
 
 // --- CONFIGURATION ---
-const WAKE_LOCK_DELAY = 5000; // 5 seconds
-const ROTATION_INTERVAL = 10000; // Switch content every 10 seconds
-const DATA_FILES = {
-    menu: 'menu.txt',
-    lessons: 'Lessons.txt'
-};
+const WAKE_LOCK_DELAY = 5000; 
+const ROTATION_INTERVAL = 10000; 
+
+// HARDCODED DATA (Bypassing file loading for testing)
+const MOCK_MENU = `
+MÅNDAG: Köttbullar med potatismos
+TISDAG: Fiskgratäng
+ONSDAG: Korvstroganoff
+TORSDAG: Ärtsoppa & Pannkakor
+FREDAG: Tacos
+`;
+
+const MOCK_LESSONS = `
+08:30 - 09:15  Matematik (Sal 3B)
+09:30 - 10:15  Engelska  (Sal 4A)
+10:30 - 11:30  Svenska   (Sal 2C)
+13:00 - 14:00  Idrott    (Gympasalen)
+`;
 
 // --- DIAGNOSTIC LOGGER ---
 function log(msg) {
     const logContainer = document.getElementById('log-entries');
     const time = new Date().toLocaleTimeString();
     const entry = `[${time}] ${msg}`;
-    
     console.log(entry);
     
-    // Create log element
-    const div = document.createElement('div');
-    div.textContent = entry;
-    logContainer.appendChild(div);
-    
-    // Auto-scroll to bottom
-    const consoleBox = document.getElementById('debug-console');
-    consoleBox.scrollTop = consoleBox.scrollHeight;
-
-    // Update loading text if visible
-    const loader = document.getElementById('loading-status');
-    if(loader) loader.textContent = msg;
+    if(logContainer) {
+        const div = document.createElement('div');
+        div.textContent = entry;
+        logContainer.appendChild(div);
+        // Auto-scroll
+        const consoleBox = document.getElementById('debug-console');
+        if(consoleBox) consoleBox.scrollTop = consoleBox.scrollHeight;
+    }
 }
 
 // --- CLOCK FUNCTION ---
@@ -38,109 +45,70 @@ function startClock() {
     log('Starting Clock...');
     setInterval(() => {
         const now = new Date();
-        // Format: HH:MM
         const timeString = now.toLocaleTimeString('sv-SE', { 
             hour: '2-digit', 
             minute: '2-digit' 
         });
-        document.getElementById('clock').textContent = timeString;
+        const clockEl = document.getElementById('clock');
+        if(clockEl) clockEl.textContent = timeString;
     }, 1000);
 }
 
-// --- WAKE LOCK (DELAYED) ---
+// --- WAKE LOCK ---
 function initWakeLock() {
     log(`Waiting ${WAKE_LOCK_DELAY}ms before requesting Wake Lock...`);
-    
     setTimeout(async () => {
         try {
             if ('wakeLock' in navigator) {
-                const wakeLock = await navigator.wakeLock.request('screen');
-                log('SUCCESS: Wake Lock is active (Screen will stay on).');
-                
-                // Re-acquire if visibility changes
-                document.addEventListener('visibilitychange', async () => {
-                    if (document.visibilityState === 'visible') {
-                        await navigator.wakeLock.request('screen');
-                        log('Wake Lock re-acquired after visibility change.');
-                    }
-                });
+                await navigator.wakeLock.request('screen');
+                log('SUCCESS: Wake Lock active.');
             } else {
-                log('WARNING: Wake Lock API not supported in this browser.');
+                log('WARNING: Wake Lock API not supported.');
             }
         } catch (err) {
-            log(`ERROR: Wake Lock failed: ${err.name}, ${err.message}`);
+            log(`ERROR: Wake Lock failed: ${err.message}`);
         }
     }, WAKE_LOCK_DELAY);
 }
 
-// --- CONTENT LOADER ---
-async function loadContent() {
-    log('Attempting to fetch data files...');
+// --- CONTENT DISPLAY ---
+function startDisplayLoop() {
+    log('Starting Display Loop (Using Internal Data)...');
     const contentDiv = document.getElementById('content');
+    
+    // Remove loading screen immediately since we have data
+    const loader = document.getElementById('loading-screen');
+    if(loader) loader.style.display = 'none';
 
-    try {
-        // 1. Fetch Menu
-        log(`Fetching ${DATA_FILES.menu}...`);
-        const menuResponse = await fetch(DATA_FILES.menu);
-        if (!menuResponse.ok) throw new Error(`Failed to load ${DATA_FILES.menu}`);
-        const menuText = await menuResponse.text();
-        log('Menu loaded successfully.');
+    let showMenu = true;
 
-        // 2. Fetch Lessons
-        log(`Fetching ${DATA_FILES.lessons}...`);
-        const lessonsResponse = await fetch(DATA_FILES.lessons);
-        if (!lessonsResponse.ok) throw new Error(`Failed to load ${DATA_FILES.lessons}`);
-        const lessonsText = await lessonsResponse.text();
-        log('Lessons loaded successfully.');
-
-        // 3. Display Logic (Simple Toggling)
-        // Note: This is a basic rotation. Adjust parsing logic as needed.
-        let showMenu = true;
+    const updateDisplay = () => {
+        contentDiv.innerHTML = ''; 
+        const wrapper = document.createElement('div');
         
-        const updateDisplay = () => {
-            contentDiv.innerHTML = ''; // Clear current
-            const wrapper = document.createElement('div');
-            
-            if (showMenu) {
-                wrapper.innerHTML = `<h2>Menu</h2><pre>${menuText}</pre>`;
-                log('Displaying Menu');
-            } else {
-                wrapper.innerHTML = `<h2>Upcoming Lessons</h2><pre>${lessonsText}</pre>`;
-                log('Displaying Lessons');
-            }
-            
-            contentDiv.appendChild(wrapper);
-            showMenu = !showMenu;
-        };
-
-        // Initial run
-        updateDisplay();
+        if (showMenu) {
+            wrapper.innerHTML = `<h2>Veckans Meny</h2><pre>${MOCK_MENU}</pre>`;
+            log('Switched to: Menu');
+        } else {
+            wrapper.innerHTML = `<h2>Dagens Lektioner</h2><pre>${MOCK_LESSONS}</pre>`;
+            log('Switched to: Lessons');
+        }
         
-        // Set interval
-        setInterval(updateDisplay, ROTATION_INTERVAL);
-        
-        // Hide Loading Screen
-        log('Initialization Complete. Removing Loading Screen.');
-        document.getElementById('loading-screen').style.display = 'none';
+        contentDiv.appendChild(wrapper);
+        showMenu = !showMenu;
+    };
 
-    } catch (error) {
-        log(`CRITICAL ERROR: ${error.message}`);
-        // Even on error, remove loading screen so we can see the debug log
-        document.getElementById('loading-screen').style.display = 'none';
-        contentDiv.innerHTML = `<h2 style="color:red">System Error</h2><p>Check Debug Log above.</p>`;
-    }
+    // Initial run
+    updateDisplay();
+    
+    // Loop
+    setInterval(updateDisplay, ROTATION_INTERVAL);
 }
 
-// --- MASTER INIT ---
+// --- INIT ---
 window.addEventListener('DOMContentLoaded', () => {
-    log('DOM Content Loaded. Script v21 starting.');
-    
-    // 1. Start Clock
+    log('v21-Bypass Started.');
     startClock();
-
-    // 2. Load Data
-    loadContent();
-
-    // 3. Attempt Wake Lock (Delayed)
-    initWakeLock();
+    initWakeLock(); // Will attempt lock after 5s
+    startDisplayLoop(); // Will show text immediately
 });
