@@ -1,6 +1,6 @@
-// --- v29 MOUSE JIGGLE HACK (WITH REDUNDANCY FIX) ---
-// Strategy: Fire fake mouse events every 30 seconds to simulate activity.
-// Result: Prevents OS sleep (no bar, no dot, no flicker).
+// --- v31 SCROLL JIGGLE HACK (WITH REDUNDANCY FIX) ---
+// Strategy: Fire synthetic scroll events every 30 seconds to simulate activity.
+// This is a robust, low-level event often recognized by Kiosk OS power management.
 // Fix: Groups currently eating are filtered out of the 'Next Group' display.
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,23 +11,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- PART 1: THE JIGGLE HACK (Keeps screen awake) ---
     function initJiggleHack() {
-        console.log("Activating mouse jiggle simulation (v29) to prevent sleep...");
+        console.log("Activating scroll simulation (v31) to prevent sleep...");
 
-        function fireMouseMove() {
-            // Create a custom MouseEvent
-            const event = new MouseEvent('mousemove', {
-                'view': window,
-                'bubbles': true, // Essential: event propagates up the DOM tree
-                'cancelable': true,
-                'screenX': 10, 
-                'screenY': 10
+        function fireScroll() {
+            // New strategy: Simulate a generic scroll event. 
+            // This event is often more reliable for preventing screen sleep than mouse/key events 
+            // in locked or Kiosk environments.
+            const event = new Event('scroll', {
+                bubbles: true, 
+                cancelable: true
             });
             // Dispatch the event on the document body
             document.body.dispatchEvent(event);
         }
 
-        // Start the jiggle loop
-        setInterval(fireMouseMove, JIGGLE_INTERVAL);
+        // Start the jiggle loop, firing a scroll event every 30 seconds
+        setInterval(fireScroll, JIGGLE_INTERVAL);
     }
 
     // Start the system
@@ -266,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function getWeekNumber(d) {
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-        var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        var yearStart = new Date(Date.UTC(d.getUTCFullullYear(), 0, 1));
         return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     }
 
