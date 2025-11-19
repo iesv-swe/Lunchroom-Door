@@ -1,173 +1,41 @@
-// --- RESTORED SCRIPT (Based on v19) ---
-// Feature: Logo Bottom Left, Clock Bottom Right (Time Only)
-// Feature: Lunch Dashboard (Only shows "Lunch" subjects)
-// Feature: Smart Wake Lock (Business Hours) with 5s Safety Delay
+// --- v23 BULLETPROOF SCRIPT ---
+// Fix: Decouples File Loading from Status Updates
+// Fix: Error Reporting on Screen (No more hanging)
 
 document.addEventListener('DOMContentLoaded', () => {
-
-    // --- PART 1: SMART WAKE LOCK (Fixed for Kiosk) ---
-    let wakeLock = null;
     
-    // We delay the initial lock by 5 seconds to let the browser stabilize
-    setTimeout(() => {
-        const managePower = async () => {
-            const now = new Date();
-            const currentHour = now.getHours();
-            const isBusinessHours = currentHour >= 6 && currentHour < 18;
-
-            if (isBusinessHours) {
-                if (!wakeLock && 'wakeLock' in navigator) {
-                    try {
-                        wakeLock = await navigator.wakeLock.request('screen');
-                        console.log('Wake Lock ACTIVE');
-                    } catch (err) { console.error('Wake Lock failed:', err); }
-                }
-            } else {
-                if (wakeLock) {
-                    await wakeLock.release();
-                    wakeLock = null;
-                    console.log('Wake Lock RELEASED (Sleep Mode)');
-                }
+    // --- GLOBAL ERROR HANDLER ---
+    // If the script crashes, this prints the error to the screen
+    // instead of hanging on "Laddar..."
+    window.onerror = function(message, source, lineno, colno, error) {
+        console.error("Global Error:", message);
+        const statusEl = document.getElementById('lounge-status');
+        if(statusEl) {
+            statusEl.innerHTML = "SYSTEM ERROR";
+            statusEl.style.color = "red";
+            statusEl.style.fontSize = "3em";
+            
+            const timerEl = document.getElementById('lounge-timer');
+            if(timerEl) {
+                timerEl.textContent = message; // Shows the actual error text
+                timerEl.style.fontSize = "1.5em";
             }
-        };
-        
-        managePower();
-        setInterval(managePower, 60000);
-    }, 5000); // <--- 5 second delay added here
+        }
+    };
 
-    // --- PART 2: CLOCK (Bottom Right) ---
+    // --- PART 1: CLOCK (Bottom Right) ---
+    // Runs immediately, independent of files
     function updateClock() {
         const now = new Date();
-        // Only show time for the bottom-right clock
         const timeString = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-        
-        const bottomRightClockEl = document.getElementById('bottom-right-clock');
-        if (bottomRightClockEl) bottomRightClockEl.textContent = timeString;
+        const clockEl = document.getElementById('bottom-right-clock');
+        if (clockEl) clockEl.textContent = timeString;
     }
     setInterval(updateClock, 1000);
-    updateClock(); // Initial call to display immediately
+    updateClock(); 
 
-    // --- PART 3: LUNCH SCHEDULE PARSER ---
-    let lunchSchedule = {};
-
-    async function loadLessons() {
-        try {
-            const response = await fetch('Lessons.txt');
-            if (!response.ok) throw new Error('Lessons.txt not found');
-            const text = await response.text();
-            parseLessons(text);
-        } catch (error) {
-            console.error('Error loading lessons:', error);
-            const dashboard = document.getElementById('lunch-dashboard');
-            if(dashboard) dashboard.style.display = 'none';
-        }
-    }
-
-    function parseLessons(text) {
-        const lines = text.split('\n');
-        const dayMap = { 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thur': 4, 'Fri': 5, 'Sat': 6, 'Sun': 0 };
-        lunchSchedule = { 1: [], 2: [], 3: [], 4: [], 5: [] };
-
-        lines.forEach(line => {
-            const cols = line.split('\t');
-            if (cols.length < 7) return;
-
-            const subject = cols[1];
-            const dayStr = cols[2];
-            const startTimeRaw = cols[3];
-            const lengthRaw = cols[4];
-            const group = cols[6];
-
-            if (subject && subject.includes('Lunch') && dayMap[dayStr]) {
-                const dayNum = dayMap[dayStr];
-                const startMin = timeToMin(startTimeRaw);
-                const endMin = startMin + parseInt(lengthRaw);
-
-                if (group) {
-                    lunchSchedule[dayNum].push({
-                        group: group,
-                        start: startMin,
-                        end: endMin
-                    });
-                }
-            }
-        });
-        
-        for (let d in lunchSchedule) {
-            lunchSchedule[d].sort((a, b) => a.start - b.start);
-        }
-        updateLunchDashboard();
-    }
-
-    function timeToMin(timeStr) {
-        const t = parseInt(timeStr);
-        const hours = Math.floor(t / 100);
-        const minutes = t % 100;
-        return hours * 60 + minutes;
-    }
-
-    // --- PART 4: LUNCH DASHBOARD ---
-    function updateLunchDashboard() {
-        const now = new Date();
-        const currentDay = now.getDay();
-        const currentHours = now.getHours();
-        const currentMinutes = now.getMinutes();
-        const nowMin = currentHours * 60 + currentMinutes;
-
-        const dashboard = document.getElementById('lunch-dashboard');
-        const nowContainer = document.getElementById('lunch-now-groups');
-        const nextContainer = document.getElementById('lunch-next-groups');
-        const nextTimer = document.getElementById('lunch-next-timer');
-
-        if (!lunchSchedule[currentDay]) {
-            if(dashboard) dashboard.style.display = 'none';
-            return;
-        }
-
-        const todaysLunches = lunchSchedule[currentDay];
-        
-        const nowGroups = [];
-        let nextGroups = [];
-        let nextStartTime = null;
-
-        todaysLunches.forEach(event => {
-            if (nowMin >= event.start && nowMin < event.end) {
-                nowGroups.push(event.group);
-            }
-            if (nowMin < event.start) {
-                if (nextStartTime === null || event.start === nextStartTime) {
-                    nextStartTime = event.start;
-                    nextGroups.push(event.group);
-                }
-            }
-        });
-
-        const timeToNext = nextStartTime ? nextStartTime - nowMin : 9999;
-        const shouldShow = (nowGroups.length > 0) || (timeToNext <= 5);
-
-        if (shouldShow) {
-            dashboard.style.display = 'block';
-            
-            if (nowGroups.length > 0) {
-                nowContainer.textContent = nowGroups.join(', ');
-            } else {
-                nowContainer.textContent = 'Förbereder...';
-            }
-
-            if (nextGroups.length > 0 && nextStartTime) {
-                nextContainer.textContent = nextGroups.join(', ');
-                nextTimer.textContent = `Startar om ${timeToNext} min`;
-            } else {
-                nextContainer.textContent = '-';
-                nextTimer.textContent = '';
-            }
-        } else {
-            dashboard.style.display = 'none';
-        }
-    }
-    setInterval(updateLunchDashboard, 5000);
-
-    // --- PART 5: STATUS & MENU ---
+    // --- PART 2: STATUS & MENU ---
+    // Runs immediately, independent of files
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
     
@@ -251,32 +119,150 @@ document.addEventListener('DOMContentLoaded', () => {
             return `${String(minutes).padStart(2, '0')}M:${String(seconds).padStart(2, '0')}S`;
         }
     }
+
+    // Start Status Update Loop
+    updateLoungeStatus();
+    setInterval(updateLoungeStatus, 1000);
+
+    // --- PART 3: WAKE LOCK (Delayed) ---
+    setTimeout(() => {
+        const managePower = async () => {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const isBusinessHours = currentHour >= 6 && currentHour < 18;
+
+            if (isBusinessHours) {
+                if ('wakeLock' in navigator) {
+                    try {
+                        await navigator.wakeLock.request('screen');
+                        console.log('Wake Lock ACTIVE');
+                    } catch (err) { console.error('Wake Lock failed:', err); }
+                }
+            }
+        };
+        managePower();
+        setInterval(managePower, 60000);
+    }, 5000); 
+
+    // --- PART 4: FILE LOADING (Safe Mode) ---
+    // These function calls are now protected so they don't stop the script if they fail
     
+    async function safeLoadLessons() {
+        try {
+            const response = await fetch('Lessons.txt');
+            if (!response.ok) throw new Error('Lessons.txt not found');
+            const text = await response.text();
+            parseLessons(text);
+        } catch (error) {
+            console.warn('Lesson load failed, hiding dashboard:', error);
+            // Do NOT crash the app, just hide the dashboard
+            const dashboard = document.getElementById('lunch-dashboard');
+            if(dashboard) dashboard.style.display = 'none';
+        }
+    }
+
+    let lunchSchedule = {};
+    function parseLessons(text) {
+        // ... (Same parser logic as before) ...
+        const lines = text.split('\n');
+        const dayMap = { 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thur': 4, 'Fri': 5, 'Sat': 6, 'Sun': 0 };
+        lunchSchedule = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+
+        lines.forEach(line => {
+            const cols = line.split('\t');
+            if (cols.length < 7) return;
+            const subject = cols[1];
+            const dayStr = cols[2];
+            const startTimeRaw = cols[3];
+            const lengthRaw = cols[4];
+            const group = cols[6];
+
+            if (subject && subject.includes('Lunch') && dayMap[dayStr]) {
+                const dayNum = dayMap[dayStr];
+                const startMin = timeToMin(startTimeRaw);
+                const endMin = startMin + parseInt(lengthRaw);
+                if (group) {
+                    lunchSchedule[dayNum].push({ group: group, start: startMin, end: endMin });
+                }
+            }
+        });
+        for (let d in lunchSchedule) lunchSchedule[d].sort((a, b) => a.start - b.start);
+        updateLunchDashboard();
+    }
+
+    function timeToMin(timeStr) {
+        const t = parseInt(timeStr);
+        return Math.floor(t / 100) * 60 + (t % 100);
+    }
+
+    function updateLunchDashboard() {
+        // ... (Same dashboard logic as before) ...
+        const now = new Date();
+        const currentDay = now.getDay();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const dashboard = document.getElementById('lunch-dashboard');
+        if (!lunchSchedule[currentDay]) { if(dashboard) dashboard.style.display = 'none'; return; }
+
+        const todaysLunches = lunchSchedule[currentDay];
+        const nowGroups = [];
+        let nextGroups = [];
+        let nextStartTime = null;
+
+        todaysLunches.forEach(event => {
+            if (nowMin >= event.start && nowMin < event.end) nowGroups.push(event.group);
+            if (nowMin < event.start) {
+                if (nextStartTime === null || event.start === nextStartTime) {
+                    nextStartTime = event.start;
+                    nextGroups.push(event.group);
+                }
+            }
+        });
+
+        const timeToNext = nextStartTime ? nextStartTime - nowMin : 9999;
+        const shouldShow = (nowGroups.length > 0) || (timeToNext <= 5);
+
+        if (shouldShow && dashboard) {
+            dashboard.style.display = 'block';
+            document.getElementById('lunch-now-groups').textContent = nowGroups.length > 0 ? nowGroups.join(', ') : 'Förbereder...';
+            if (nextGroups.length > 0 && nextStartTime) {
+                document.getElementById('lunch-next-groups').textContent = nextGroups.join(', ');
+                document.getElementById('lunch-next-timer').textContent = `Startar om ${timeToNext} min`;
+            } else {
+                document.getElementById('lunch-next-groups').textContent = '-';
+                document.getElementById('lunch-next-timer').textContent = '';
+            }
+        } else if (dashboard) {
+            dashboard.style.display = 'none';
+        }
+    }
+    setInterval(updateLunchDashboard, 5000);
+
+    // Helper for Menu
     function getWeekNumber(d) {
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
         var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-        var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-        return weekNo;
+        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     }
-    
-    async function loadMenu() {
-        const today = new Date();
-        const currentWeek = getWeekNumber(today);
-        const currentDayIndex = today.getDay();
-        document.getElementById('week-number').textContent = currentWeek;
+
+    async function safeLoadMenu() {
         try {
+            const today = new Date();
+            const currentWeek = getWeekNumber(today);
+            document.getElementById('week-number').textContent = currentWeek;
+            
             const response = await fetch('menu.txt');
-            if (!response.ok) { throw new Error('menu.txt file not found.'); }
+            if (!response.ok) throw new Error('menu.txt not found');
             const text = await response.text();
-            parseMenu(text, currentWeek, currentDayIndex);
+            parseMenu(text, currentWeek, today.getDay());
         } catch (error) {
-            console.error('Error loading menu:', error);
-            document.getElementById('menu-grid').innerHTML = '<p style="color:white; font-size: 1.5em;">Laddar meny...</p>';
+            console.warn('Menu load failed:', error);
+            document.getElementById('menu-grid').innerHTML = '<p style="color:white">Meny kunde inte laddas.</p>';
         }
     }
-    
+
     function parseMenu(text, currentWeek, currentDayIndex) {
+        // ... (Same menu parser) ...
         const lines = text.split('\n');
         let activeWeek = false;
         let activeDay = '';
@@ -299,17 +285,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('#menu-wednesday .menu-content').textContent = menuData.WEDNESDAY || 'Meny saknas';
         document.querySelector('#menu-thursday .menu-content').textContent = menuData.THURSDAY || 'Meny saknas';
         document.querySelector('#menu-friday .menu-content').textContent = menuData.FRIDAY || 'Meny saknas';
-        
         if (currentDayIndex >= 1 && currentDayIndex <= 5) {
             const todayKey = days[currentDayIndex].toLowerCase();
-            const todayElement = document.getElementById(`menu-${todayKey}`);
-            if (todayElement) { todayElement.classList.add('today'); }
+            const el = document.getElementById(`menu-${todayKey}`);
+            if (el) el.classList.add('today');
         }
     }
 
-    // INIT
-    loadLessons(); 
-    loadMenu();
-    updateLoungeStatus();
-    setInterval(updateLoungeStatus, 1000);
+    // --- EXECUTE SAFE LOADERS ---
+    safeLoadLessons();
+    safeLoadMenu();
+
 });
