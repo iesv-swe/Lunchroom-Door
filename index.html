@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Lounge Sign</title>
-    <link rel="stylesheet" href="style.css?v=27">
+    <!-- Cache Buster: Use ?v=29 to force the browser to load the latest CSS -->
+    <link rel="stylesheet" href="style.css?v=29">
 </head>
 <body>
 
+    <!-- Logo Bottom Left -->
     <img src="logo.png" alt="School Logo" id="school-logo" onerror="this.style.display='none'">
 
     <div class="container">
@@ -36,6 +38,7 @@
         <div id="menu-container">
             <h1>Veckans Lunchmeny (Vecka <span id="week-number"></span>)</h1>
             <div id="menu-grid">
+                <!-- Day content is dynamically updated via script.js -->
                 <div class="menu-day" id="menu-monday">
                     <h3>Måndag</h3>
                     <pre class="menu-content"></pre>
@@ -60,8 +63,10 @@
         </div>
     </div>
 
+    <!-- Clock Bottom Right -->
     <div id="bottom-right-clock"></div>
 
-    <script src="script.js?v=27"></script>
+    <!-- Cache Buster: Use ?v=29 to force the browser to load the latest script -->
+    <script src="script.js?v=29"></script>
 </body>
 </html>
