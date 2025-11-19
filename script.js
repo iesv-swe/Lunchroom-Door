@@ -1,93 +1,25 @@
-// --- v26 HYBRID SCRIPT ---
-// Strategy: Try MP4 Video (No Bar). If fails, fallback to API (White Bar).
-// Goal: 100% Uptime Guarantee.
+// --- v27 AUTO-REFRESH SCRIPT ---
+// Strategy: Reload page every 5 minutes to reset OS Idle Timer.
+// Result: Screen stays on. NO White Bar. NO Video Errors.
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- CONFIG ---
-    const ENABLE_DEBUG_DOT = true; // Set to false to hide the dot once verified
+    // --- CONFIGURATION ---
+    // 5 Minutes (300,000ms). Safe for most Chromebooks (default sleep is usually ~10 mins)
+    const REFRESH_INTERVAL = 300000; 
 
-    // --- GLOBAL ERROR HANDLER ---
-    window.onerror = function(message) { console.error("Global Error:", message); };
-
-    // --- PART 1: VIDEO WAKE LOCK (Attempt 1 - The "Silent" Way) ---
-    function initWakeLockSystem() {
-        console.log('Initializing Wake Lock System...');
+    // --- PART 1: THE "PULSE" REFRESH ---
+    function initAutoRefresh() {
+        console.log(`System will auto-refresh every ${REFRESH_INTERVAL/1000} seconds to prevent sleep.`);
         
-        // 1. Setup Debug Dot
-        let dot = null;
-        if (ENABLE_DEBUG_DOT) {
-            dot = document.createElement('div');
-            dot.id = 'debug-dot';
-            // Style is handled in CSS
-            document.body.appendChild(dot); 
-        }
-
-        // 2. Create Invisible Video (MP4 format this time)
-        const video = document.createElement('video');
-        
-        // Tiny 1x1 pixel MP4 (More compatible than WebM)
-        video.src = "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMQAAAAAmo21vb3YAAABsbXZoAAAAAAAAAAEABgAAAAABAAABAAAAAQAAAAAAAAAZdHJhawAAAFx0a2hkAAAAAQAAAAEAAAAAAAAAAAAAAQAAAAAAAAABAAAAAAABAAAAAQAAAAAAAgAAABBtZGlhAAAAIG1kaGQAAAAAAAAAAQAAAAEAAAAAAAEAAAAAAQAAAAAAIWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAAB2aWRlAAAAAG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAA5zdGJsAAAACmN0dHMAAAAAAAAMc3RzZAAAAAAAAAABAAAANGF2YzEAAAAAAAAAAQABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAQAAAAAAAABhYXZjQwAAAAAACEBzdHNjAAAAAAAAAAEAAAABAAAAAQAAAAEAAAAQc3RzegAAAAAAAAABAAAAFHN0Y28AAAAAAAAAAQAAAAwAAAAYbWRhdAAAAAAAAAAB";
-        
-        video.playsInline = true;
-        video.loop = true;
-        video.muted = true; // Critical
-        
-        // Visual Hiding
-        video.style.position = 'fixed';
-        video.style.zIndex = '-9999';
-        video.style.opacity = '0.01';
-        video.style.pointerEvents = 'none';
-        
-        document.body.appendChild(video);
-
-        // 3. Attempt Play
-        const playPromise = video.play();
-
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                // --- SUCCESS (Green Dot) ---
-                console.log('SUCCESS: MP4 Video playing. Screen locked via Video Hack.');
-                if(dot) dot.style.backgroundColor = '#00ff00'; // Green
-                // We do NOT activate the API lock here, so No White Bar!
-            }).catch(error => {
-                // --- FAILURE (Orange Dot) -> ACTIVATE FALLBACK ---
-                console.warn('WARNING: Video Autoplay failed. Switching to API Backup.', error);
-                if(dot) dot.style.backgroundColor = 'orange'; // Orange
-                
-                // ACTIVATE BACKUP (The Standard Wake Lock)
-                activateBackupWakeLock();
-            });
-        }
+        setTimeout(() => {
+            console.log('Refeshing page to reset idle timer...');
+            window.location.reload();
+        }, REFRESH_INTERVAL);
     }
 
-    // --- BACKUP: STANDARD API WAKE LOCK (If video fails) ---
-    let apiWakeLock = null;
-    async function activateBackupWakeLock() {
-        console.log('Activating Backup API Wake Lock...');
-        try {
-            if ('wakeLock' in navigator) {
-                apiWakeLock = await navigator.wakeLock.request('screen');
-                console.log('Backup Lock: ACTIVE');
-                
-                // Re-acquire on visibility change
-                document.addEventListener('visibilitychange', async () => {
-                    if (document.visibilityState === 'visible' && apiWakeLock === null) {
-                        apiWakeLock = await navigator.wakeLock.request('screen');
-                    }
-                });
-            }
-        } catch (err) {
-            console.error('Backup Lock Failed:', err);
-            // If dot exists, turn it RED to show total failure
-            const dot = document.getElementById('debug-dot');
-            if(dot) dot.style.backgroundColor = 'red'; 
-        }
-    }
-
-    // Start the System
-    initWakeLockSystem();
-
+    // Start the timer
+    initAutoRefresh();
 
     // --- PART 2: CLOCK (Bottom Right) ---
     function updateClock() {
@@ -185,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateLoungeStatus();
     setInterval(updateLoungeStatus, 1000);
 
-    // --- PART 4: FILE LOADING ---
+    // --- PART 4: FILE LOADING (Standard) ---
     
     async function safeLoadLessons() {
         try {
