@@ -65,16 +65,16 @@ body {
 #lounge-status.open { color: #4CAF50; /* Green */ }
 #lounge-status.closed { color: #F44336; /* Red */ }
 
-/* Lunch Dashboard */
+/* Lunch Dashboard - COMPACTED */
 #lunch-dashboard {
     display: none; /* Hidden by default, shown by script */
-    margin: 20px auto;
+    margin: 10px auto; /* Reduced margin */
     width: 90%;
-    max-width: 1000px;
+    max-width: 800px; /* Reduced width from 1000px */
     background-color: #1f408a;
     border: 2px solid #00a0df; /* Blue border */
     border-radius: 12px;
-    padding: 20px;
+    padding: 15px; /* Reduced padding */
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
@@ -86,19 +86,19 @@ body {
 
 .lunch-col {
     flex: 1;
-    padding: 10px;
+    padding: 5px; /* Reduced padding */
 }
 
 .lunch-label {
-    font-size: 1.5em;
+    font-size: 1.5em; /* Reduced size */
     font-weight: bold;
     color: #9a9b9d;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     display: block;
 }
 
 .lunch-groups {
-    font-size: 3em;
+    font-size: 2.5em; /* Reduced size */
     font-weight: bold;
     color: #ffffff;
     display: block;
