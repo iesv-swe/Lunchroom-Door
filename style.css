@@ -4,17 +4,35 @@ body {
     background-color: #102d69;
     color: #dbdad8;
     padding: 20px;
-    margin: 0; /* Added to prevent edge bars */
+    margin: 0;
     height: 100vh;
-    width: 100vw; /* Ensure full width */
+    width: 100vw;
     box-sizing: border-box;
     display: flex;
     flex-direction: column; 
     align-items: center; 
     position: relative; 
-    overflow: hidden; /* STRICTLY hides scroll bars */
+    overflow: hidden;
+    
+    /* Hide Mouse Cursor */
+    cursor: none; 
 }
 
+/* --- DEBUG DOT (Remove this section later) --- */
+#debug-dot {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: red; /* Default to Red (Not playing) */
+    z-index: 99999;
+    border: 2px solid white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+/* ... (The rest of your CSS remains exactly the same) ... */
 .container {
     width: 95%;
     max-width: 1400px;
@@ -24,7 +42,6 @@ body {
     flex-grow: 1; 
 }
 
-/* --- LOGO STYLING (BOTTOM LEFT) --- */
 #school-logo {
     position: absolute;
     bottom: 20px;
@@ -34,7 +51,6 @@ body {
     z-index: 100; 
 }
 
-/* --- STATUS STYLING --- */
 #lounge-status {
     font-size: 6em;
     font-weight: bold;
@@ -51,8 +67,6 @@ body {
 #lounge-status.open { color: #4CAF50; }
 #lounge-status.closed { color: #F44336; }
 
-
-/* --- LUNCH DASHBOARD (Now/Next) --- */
 #lunch-dashboard {
     display: none; 
     margin: 20px auto;
@@ -99,11 +113,11 @@ body {
     margin-top: 5px;
 }
 
-
-/* --- MENU STYLING --- */
 hr {
+    display: none; 
     border: 1px solid #9a9b9d;
     margin: 40px 0;
+    width: 100%;
 }
 
 #menu-container h1 { display: none; }
@@ -146,7 +160,6 @@ hr {
     margin: 0;
 }
 
-/* --- BOTTOM RIGHT CLOCK --- */
 #bottom-right-clock {
     position: absolute;
     bottom: 20px;
