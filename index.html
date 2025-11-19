@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Lounge Sign</title>
-    <!-- Cache Buster: Use ?v=37 to force the browser to load the latest CSS -->
-    <link rel="stylesheet" href="style.css?v=37">
+    <!-- Updated to v38 -->
+    <link rel="stylesheet" href="style.css?v=38">
 </head>
 <body>
 
@@ -13,7 +13,6 @@
     <img src="logo.png" alt="School Logo" id="school-logo" onerror="this.style.display='none'">
 
     <div class="container">
-        <!-- Lounge Status Section -->
         <div id="status-container">
             <h2 id="lounge-status">Laddar...</h2>
             <p id="lounge-timer"></p>
@@ -21,14 +20,12 @@
 
         <hr id="divider-bar">
 
-        <!-- Lunch Status Dashboard -->
         <div id="lunch-dashboard">
             <div class="lunch-row">
                 <div class="lunch-col">
                     <span class="lunch-label">JUST NU</span>
                     <span id="lunch-now-groups" class="lunch-groups">-</span>
                 </div>
-                <!-- Visual separator -->
                 <div style="border-left: 1px solid #9a9b9d; margin: 0 20px;"></div>
                 <div class="lunch-col">
                     <span class="lunch-label">NÄSTA GRUPP</span>
@@ -38,11 +35,9 @@
             </div>
         </div>
 
-        <!-- Weekly Menu -->
         <div id="menu-container">
             <h1>Veckans Lunchmeny (Vecka <span id="week-number"></span>)</h1>
             <div id="menu-grid">
-                <!-- Day content is dynamically updated via script.js -->
                 <div class="menu-day" id="menu-monday">
                     <h3>Måndag</h3>
                     <pre class="menu-content"></pre>
@@ -67,10 +62,9 @@
         </div>
     </div>
 
-    <!-- Clock Bottom Right -->
     <div id="bottom-right-clock"></div>
 
-    <!-- Cache Buster: Use ?v=37 to force the browser to load the latest script -->
-    <script src="script.js?v=37"></script>
+    <!-- Updated to v38 -->
+    <script src="script.js?v=38"></script>
 </body>
 </html>
