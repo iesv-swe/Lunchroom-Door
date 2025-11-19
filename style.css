@@ -1,6 +1,5 @@
 /* Basic setup */
 body {
-    /* THIS IS THE SANS-SERIF FONT YOU ASKED FOR */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background-color: #102d69;
     color: #dbdad8;
@@ -10,22 +9,25 @@ body {
     display: flex;
     justify-content: center;
     text-align: center;
+    position: relative; /* Needed for absolute positioning of clock */
 }
 
 .container {
     width: 95%;
     max-width: 1400px;
     margin: 0 auto;
+    /* Add padding at bottom so content doesn't sit behind the clock */
+    padding-bottom: 150px; 
 }
 
 /* --- NEW LOGO STYLING --- */
 #school-logo {
-    max-height: 120px; /* You can change this */
+    max-height: 120px;
     width: auto;
     margin-bottom: 20px;
 }
 
-/* --- STATUS STYLING (BIGGER) --- */
+/* --- STATUS STYLING --- */
 #lounge-status {
     font-size: 6em;
     font-weight: bold;
@@ -43,16 +45,61 @@ body {
 #lounge-status.closed { color: #F44336; }
 
 
-/* --- MENU STYLING (SINGLE DAY, LARGE) --- */
+/* --- LUNCH DASHBOARD (Now/Next) --- */
+#lunch-dashboard {
+    display: none; /* Hidden by default */
+    margin: 20px auto;
+    width: 90%;
+    max-width: 1000px;
+    background-color: #1f408a;
+    border: 2px solid #00a0df;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.lunch-row {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+}
+
+.lunch-col {
+    flex: 1;
+    padding: 10px;
+}
+
+.lunch-label {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #9a9b9d;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.lunch-groups {
+    font-size: 3em;
+    font-weight: bold;
+    color: #ffffff;
+    display: block;
+}
+
+#lunch-next-timer {
+    font-size: 1.2em;
+    color: #F44336; /* Red countdown */
+    font-weight: bold;
+    display: block;
+    margin-top: 5px;
+}
+
+
+/* --- MENU STYLING --- */
 hr {
     border: 1px solid #9a9b9d;
     margin: 40px 0;
 }
 
-#menu-container h1 {
-    /* Hiding "Veckans Lunchmeny" */
-    display: none;
-}
+#menu-container h1 { display: none; }
 
 #menu-grid {
     display: flex;
@@ -60,9 +107,7 @@ hr {
 }
 
 .menu-day {
-    /* HIDE ALL DAYS BY DEFAULT */
     display: none; 
-    
     background-color: #1f408a;
     border-radius: 8px;
     padding: 20px;
@@ -71,7 +116,6 @@ hr {
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* SHOW *ONLY* THE CURRENT DAY */
 .menu-day.today {
     display: block;
     border: 3px solid #00a0df;
@@ -86,7 +130,6 @@ hr {
 }
 
 .menu-content {
-    /* THIS FORCES THE SANS-SERIF FONT (overrides <pre>) */
     font-family: inherit; 
     font-size: 3em;
     line-height: 1.4;
@@ -94,4 +137,28 @@ hr {
     text-align: left;
     white-space: pre-wrap;
     margin: 0;
+}
+
+/* --- CLOCK (Bottom Center) --- */
+#clock-display {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: #dbdad8;
+    line-height: 1.2;
+}
+
+#clock-time {
+    font-size: 4em;
+    font-weight: bold;
+    color: white;
+    display: block;
+}
+
+#clock-date {
+    font-size: 1.5em;
+    color: #9a9b9d;
+    display: block;
 }
