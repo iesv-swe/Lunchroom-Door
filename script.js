@@ -1,7 +1,6 @@
-// --- v31 SCROLL JIGGLE HACK (WITH REDUNDANCY FIX) ---
-// Strategy: Fire synthetic scroll events every 30 seconds to simulate activity.
-// This is a robust, low-level event often recognized by Kiosk OS power management.
-// Fix: Groups currently eating are filtered out of the 'Next Group' display.
+// --- v32 LUNCH FILTER UPDATE ---
+// The Scroll Jiggle Hack (v31) remains active to prevent sleep.
+// NEW: Excludes all classes/groups that contain the word 'support' from the lunch dashboard.
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -11,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- PART 1: THE JIGGLE HACK (Keeps screen awake) ---
     function initJiggleHack() {
-        console.log("Activating scroll simulation (v31) to prevent sleep...");
+        console.log("Activating scroll simulation (v32) to prevent sleep...");
 
         function fireScroll() {
             // New strategy: Simulate a generic scroll event. 
@@ -179,7 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const dayNum = dayMap[dayStr];
                 const startMin = timeToMin(startTimeRaw);
                 const endMin = startMin + parseInt(lengthRaw);
-                if (group) {
+                
+                // --- V32: CHECK TO EXCLUDE 'SUPPORT' CLASSES ---
+                if (group && !group.toLowerCase().includes('support')) { 
                     lunchSchedule[dayNum].push({ group: group, start: startMin, end: endMin });
                 }
             }
@@ -227,11 +228,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // --- FIX V29: Remove groups currently eating (nowGroups) from the "Next" list (nextGroups) ---
+        // Remove groups currently eating (nowGroups) from the "Next" list (nextGroups)
         const nowGroupSet = new Set(nowGroups);
         const filteredNextGroups = nextGroups.filter(group => !nowGroupSet.has(group));
-        // ---------------------------------------------------------------------------------------------
-
+        
         const timeToNext = nextStartTime ? nextStartTime - nowMin : 9999;
         // Show dashboard if lunch is happening now, or if the next lunch is within 5 minutes
         const shouldShow = (nowGroups.length > 0) || (timeToNext <= 5);
