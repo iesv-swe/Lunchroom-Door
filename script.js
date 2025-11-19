@@ -1,183 +1,146 @@
-/* Basic setup */
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #102d69;
-    color: #dbdad8;
-    padding: 20px;
-    height: 100vh;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-    text-align: center;
-    position: relative; /* Essential for corner positioning */
-    overflow: hidden; /* Prevents scrollbars if content gets too tall */
+/**
+ * Diagnostic Script v21
+ * Feature: 5s Wake Lock Delay, Error Logging, Clock, Logo
+ */
+
+// --- CONFIGURATION ---
+const WAKE_LOCK_DELAY = 5000; // 5 seconds
+const ROTATION_INTERVAL = 10000; // Switch content every 10 seconds
+const DATA_FILES = {
+    menu: 'menu.txt',
+    lessons: 'Lessons.txt'
+};
+
+// --- DIAGNOSTIC LOGGER ---
+function log(msg) {
+    const logContainer = document.getElementById('log-entries');
+    const time = new Date().toLocaleTimeString();
+    const entry = `[${time}] ${msg}`;
+    
+    console.log(entry);
+    
+    // Create log element
+    const div = document.createElement('div');
+    div.textContent = entry;
+    logContainer.appendChild(div);
+    
+    // Auto-scroll to bottom
+    const consoleBox = document.getElementById('debug-console');
+    consoleBox.scrollTop = consoleBox.scrollHeight;
+
+    // Update loading text if visible
+    const loader = document.getElementById('loading-status');
+    if(loader) loader.textContent = msg;
 }
 
-.container {
-    width: 95%;
-    max-width: 1400px;
-    margin: 0 auto;
-    /* Push content up slightly so it doesn't hit the footer logo/clock */
-    padding-bottom: 120px; 
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start; /* Align towards top */
+// --- CLOCK FUNCTION ---
+function startClock() {
+    log('Starting Clock...');
+    setInterval(() => {
+        const now = new Date();
+        // Format: HH:MM
+        const timeString = now.toLocaleTimeString('sv-SE', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        document.getElementById('clock').textContent = timeString;
+    }, 1000);
 }
 
-/* --- STATUS STYLING --- */
-#status-container {
-    margin-top: 20px;
+// --- WAKE LOCK (DELAYED) ---
+function initWakeLock() {
+    log(`Waiting ${WAKE_LOCK_DELAY}ms before requesting Wake Lock...`);
+    
+    setTimeout(async () => {
+        try {
+            if ('wakeLock' in navigator) {
+                const wakeLock = await navigator.wakeLock.request('screen');
+                log('SUCCESS: Wake Lock is active (Screen will stay on).');
+                
+                // Re-acquire if visibility changes
+                document.addEventListener('visibilitychange', async () => {
+                    if (document.visibilityState === 'visible') {
+                        await navigator.wakeLock.request('screen');
+                        log('Wake Lock re-acquired after visibility change.');
+                    }
+                });
+            } else {
+                log('WARNING: Wake Lock API not supported in this browser.');
+            }
+        } catch (err) {
+            log(`ERROR: Wake Lock failed: ${err.name}, ${err.message}`);
+        }
+    }, WAKE_LOCK_DELAY);
 }
 
-#lounge-status {
-    font-size: 6em;
-    font-weight: bold;
-    margin: 0;
-    text-transform: uppercase;
-    line-height: 1.1;
+// --- CONTENT LOADER ---
+async function loadContent() {
+    log('Attempting to fetch data files...');
+    const contentDiv = document.getElementById('content');
+
+    try {
+        // 1. Fetch Menu
+        log(`Fetching ${DATA_FILES.menu}...`);
+        const menuResponse = await fetch(DATA_FILES.menu);
+        if (!menuResponse.ok) throw new Error(`Failed to load ${DATA_FILES.menu}`);
+        const menuText = await menuResponse.text();
+        log('Menu loaded successfully.');
+
+        // 2. Fetch Lessons
+        log(`Fetching ${DATA_FILES.lessons}...`);
+        const lessonsResponse = await fetch(DATA_FILES.lessons);
+        if (!lessonsResponse.ok) throw new Error(`Failed to load ${DATA_FILES.lessons}`);
+        const lessonsText = await lessonsResponse.text();
+        log('Lessons loaded successfully.');
+
+        // 3. Display Logic (Simple Toggling)
+        // Note: This is a basic rotation. Adjust parsing logic as needed.
+        let showMenu = true;
+        
+        const updateDisplay = () => {
+            contentDiv.innerHTML = ''; // Clear current
+            const wrapper = document.createElement('div');
+            
+            if (showMenu) {
+                wrapper.innerHTML = `<h2>Menu</h2><pre>${menuText}</pre>`;
+                log('Displaying Menu');
+            } else {
+                wrapper.innerHTML = `<h2>Upcoming Lessons</h2><pre>${lessonsText}</pre>`;
+                log('Displaying Lessons');
+            }
+            
+            contentDiv.appendChild(wrapper);
+            showMenu = !showMenu;
+        };
+
+        // Initial run
+        updateDisplay();
+        
+        // Set interval
+        setInterval(updateDisplay, ROTATION_INTERVAL);
+        
+        // Hide Loading Screen
+        log('Initialization Complete. Removing Loading Screen.');
+        document.getElementById('loading-screen').style.display = 'none';
+
+    } catch (error) {
+        log(`CRITICAL ERROR: ${error.message}`);
+        // Even on error, remove loading screen so we can see the debug log
+        document.getElementById('loading-screen').style.display = 'none';
+        contentDiv.innerHTML = `<h2 style="color:red">System Error</h2><p>Check Debug Log above.</p>`;
+    }
 }
 
-#lounge-timer {
-    font-size: 3.5em;
-    color: #9a9b9d;
-    margin-top: 10px;
-    margin-bottom: 20px;
-}
+// --- MASTER INIT ---
+window.addEventListener('DOMContentLoaded', () => {
+    log('DOM Content Loaded. Script v21 starting.');
+    
+    // 1. Start Clock
+    startClock();
 
-#lounge-status.open { color: #4CAF50; }
-#lounge-status.closed { color: #F44336; }
+    // 2. Load Data
+    loadContent();
 
-
-/* --- LUNCH DASHBOARD (Now/Next) --- */
-#lunch-dashboard {
-    display: none; /* Hidden by default */
-    margin: 10px auto 30px auto;
-    width: 90%;
-    max-width: 1000px;
-    background-color: #1f408a;
-    border: 2px solid #00a0df;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
-.lunch-row {
-    display: flex;
-    justify-content: space-around;
-    text-align: center;
-}
-
-.lunch-col {
-    flex: 1;
-    padding: 10px;
-}
-
-.lunch-label {
-    font-size: 1.8em;
-    font-weight: bold;
-    color: #9a9b9d;
-    margin-bottom: 10px;
-    display: block;
-}
-
-.lunch-groups {
-    font-size: 3em;
-    font-weight: bold;
-    color: #ffffff;
-    display: block;
-}
-
-#lunch-next-timer {
-    font-size: 1.2em;
-    color: #F44336; /* Red countdown */
-    font-weight: bold;
-    display: block;
-    margin-top: 5px;
-}
-
-
-/* --- MENU STYLING --- */
-hr {
-    border: 1px solid #9a9b9d;
-    margin: 20px 0;
-    width: 100%;
-}
-
-#menu-container h1 { display: none; }
-
-#menu-grid {
-    display: flex;
-    justify-content: center; 
-    width: 100%;
-}
-
-.menu-day {
-    display: none; 
-    background-color: #1f408a;
-    border-radius: 8px;
-    padding: 30px;
-    flex-basis: 100%;
-    max-width: 1100px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-.menu-day.today {
-    display: block;
-    border: 3px solid #00a0df;
-    background-color: rgba(0, 160, 223, 0.1);
-}
-
-.menu-day h3 {
-    font-size: 4.5em;
-    color: #00a0df;
-    margin-top: 0;
-    margin-bottom: 30px;
-}
-
-.menu-content {
-    font-family: inherit; 
-    font-size: 2.8em;
-    line-height: 1.5;
-    color: #dbdad8;
-    text-align: left;
-    white-space: pre-wrap;
-    margin: 0;
-}
-
-/* --- FOOTER ELEMENTS (Absolute Positioning) --- */
-
-/* LOGO: Bottom Left */
-#school-logo {
-    position: absolute;
-    bottom: 25px;
-    left: 30px;
-    max-height: 130px;
-    width: auto;
-    /* Ensure it sits on top if window is small */
-    z-index: 10; 
-}
-
-/* CLOCK: Bottom Right */
-#clock-display {
-    position: absolute;
-    bottom: 25px;
-    right: 30px;
-    text-align: right;
-    color: #dbdad8;
-    line-height: 1.2;
-    z-index: 10;
-}
-
-#clock-time {
-    font-size: 4.5em;
-    font-weight: bold;
-    color: white;
-    display: block;
-}
-
-#clock-date {
-    font-size: 1.8em;
-    color: #9a9b9d;
-    display: block;
-    margin-top: 5px;
-}
+    // 3. Attempt Wake Lock (Delayed)
+    initWakeLock();
+});
