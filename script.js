@@ -1,7 +1,7 @@
-// --- v46 DEDUPLICATION FIX ---
-// Fix: Added Set() logic to remove duplicate class names from the dashboard.
-// Layout: Uses the 'Fit Fix' CSS (v45) to ensure text doesn't fall off.
-// Logic: Wake Lock API, Filters (Support/Prao), Query-String Cache Busting.
+// --- v47 TRIM & CLEAN FIX ---
+// Fix: Added .trim() to group names during parsing to remove invisible spaces.
+//      This fixes the issue where "6a" and "6a " were treated as different groups.
+// Logic: Wake Lock API, Filters, Deduplication, Cache Busting.
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -155,7 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const dayStr = cols[2];
             const startTimeRaw = cols[3];
             const lengthRaw = cols[4];
-            const group = cols[6];
+            
+            // TRIM FIX: Clean up group name immediately
+            const group = cols[6] ? cols[6].trim() : '';
 
             if (subject && subject.includes('Lunch') && dayMap[dayStr] >= 1 && dayMap[dayStr] <= 5) {
                 const dayNum = dayMap[dayStr];
@@ -163,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const endMin = startMin + parseInt(lengthRaw);
                 
                 // Filter Logic: Exclude Support and Prao
-                const normalizedGroup = group ? group.toLowerCase() : '';
+                const normalizedGroup = group.toLowerCase();
                 const isExcluded = normalizedGroup.includes('support') || normalizedGroup.includes('prao');
 
                 if (group && !isExcluded) { 
@@ -208,13 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // --- NEW DEDUPLICATION LOGIC (v46) ---
-        // Remove duplicates from 'nowGroups' (e.g. turn ["5A", "5A", "4B"] into ["5A", "4B"])
+        // Deduplication: Remove EXACT duplicates
         nowGroups = [...new Set(nowGroups)];
-        
-        // Remove duplicates from 'nextGroups'
         nextGroups = [...new Set(nextGroups)];
-        // ------------------------------------
 
         const nowGroupSet = new Set(nowGroups);
         const filteredNextGroups = nextGroups.filter(group => !nowGroupSet.has(group));
