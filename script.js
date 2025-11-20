@@ -1,6 +1,7 @@
-// --- v44 FINAL ---
-// Layout: CSS is now embedded in HTML to prevent layout breakage.
-// Logic: Wake Lock API, Support/Prao Filters, Robust File Loading.
+// --- v46 DEDUPLICATION FIX ---
+// Fix: Added Set() logic to remove duplicate class names from the dashboard.
+// Layout: Uses the 'Fit Fix' CSS (v45) to ensure text doesn't fall off.
+// Logic: Wake Lock API, Filters (Support/Prao), Query-String Cache Busting.
 
 document.addEventListener('DOMContentLoaded', () => {
     
@@ -12,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if ('wakeLock' in navigator) {
                 wakeLock = await navigator.wakeLock.request('screen');
                 console.log('Wake Lock: ACTIVE');
-                
                 wakeLock.addEventListener('release', () => {
                     console.log('Wake Lock: RELEASED');
                     wakeLock = null;
@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Re-acquire lock
     document.addEventListener('visibilitychange', async () => {
         if (document.visibilityState === 'visible' && wakeLock === null) {
             await requestWakeLock();
@@ -163,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const startMin = timeToMin(startTimeRaw);
                 const endMin = startMin + parseInt(lengthRaw);
                 
-                // Filter Logic
+                // Filter Logic: Exclude Support and Prao
                 const normalizedGroup = group ? group.toLowerCase() : '';
                 const isExcluded = normalizedGroup.includes('support') || normalizedGroup.includes('prao');
 
@@ -195,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const todaysLunches = lunchSchedule[currentDay];
-        const nowGroups = [];
+        let nowGroups = [];
         let nextGroups = [];
         let nextStartTime = null;
 
@@ -208,6 +207,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+
+        // --- NEW DEDUPLICATION LOGIC (v46) ---
+        // Remove duplicates from 'nowGroups' (e.g. turn ["5A", "5A", "4B"] into ["5A", "4B"])
+        nowGroups = [...new Set(nowGroups)];
+        
+        // Remove duplicates from 'nextGroups'
+        nextGroups = [...new Set(nextGroups)];
+        // ------------------------------------
 
         const nowGroupSet = new Set(nowGroups);
         const filteredNextGroups = nextGroups.filter(group => !nowGroupSet.has(group));
