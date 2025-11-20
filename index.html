@@ -4,109 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Lounge Sign</title>
-    <style>
-        /* --- EMBEDDED CSS (v44) --- */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #102d69; /* Dark Blue */
-            color: #dbdad8; /* Off-White */
-            padding: 20px;
-            margin: 0;
-            height: 100vh;
-            width: 100vw;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column; 
-            align-items: center; 
-            position: relative; 
-            overflow: hidden;
-            cursor: none; /* Hide Mouse */
-        }
-
-        /* Scrollbar hiding */
-        ::-webkit-scrollbar { display: none; }
-        body { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Container */
-        .container {
-            width: 95%;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding-bottom: 20px; 
-            text-align: center; 
-            flex-grow: 1; 
-        }
-
-        /* Logo - SAFETY STYLE APPLIED */
-        #school-logo {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            max-height: 120px; /* Forces logo to be small */
-            width: auto;
-            z-index: 100; 
-        }
-
-        /* Status */
-        #lounge-status {
-            font-size: 6em;
-            font-weight: bold;
-            margin: 0;
-            text-transform: uppercase;
-        }
-        #lounge-timer {
-            font-size: 3.5em;
-            color: #9a9b9d;
-            margin-top: 10px;
-        }
-        #lounge-status.open { color: #4CAF50; }
-        #lounge-status.closed { color: #F44336; }
-
-        /* Dashboard */
-        #lunch-dashboard {
-            display: none;
-            margin: 20px auto;
-            width: 90%;
-            max-width: 1000px;
-            background-color: #1f408a;
-            border: 2px solid #00a0df;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        .lunch-row { display: flex; justify-content: space-around; text-align: center; }
-        .lunch-col { flex: 1; padding: 10px; }
-        .lunch-label { font-size: 1.8em; font-weight: bold; color: #9a9b9d; margin-bottom: 10px; display: block; }
-        .lunch-groups { font-size: 3em; font-weight: bold; color: #ffffff; display: block; }
-        #lunch-next-timer { font-size: 1.2em; color: #F44336; font-weight: bold; display: block; margin-top: 5px; }
-        #divider-bar { display: none; border: 1px solid #9a9b9d; margin: 40px 0; width: 100%; }
-
-        /* Menu */
-        #menu-container h1 { display: none; }
-        #menu-grid { display: flex; justify-content: center; }
-        .menu-day { display: none; background-color: #1f408a; border-radius: 8px; padding: 20px; flex-basis: 100%; max-width: 900px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-        .menu-day.today { display: block; border: 3px solid #00a0df; background-color: rgba(0, 160, 223, 0.1); }
-        .menu-day h3 { font-size: 5em; color: #00a0df; margin-top: 0; margin-bottom: 20px; }
-        .menu-content { font-family: inherit; font-size: 3em; line-height: 1.4; color: #dbdad8; text-align: left; white-space: pre-wrap; margin: 0; }
-
-        /* Clock */
-        #bottom-right-clock {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            font-size: 4em; 
-            font-weight: bold;
-            color: white;
-            z-index: 100;
-        }
-    </style>
+    <!-- Cache Buster: Use ?v=45 to load the new sizing -->
+    <link rel="stylesheet" href="style.css?v=45">
 </head>
 <body>
 
-    <!-- Inline style to force logo small even if CSS fails -->
-    <img src="logo.png" alt="School Logo" id="school-logo" style="max-height: 120px; width: auto;" onerror="this.style.display='none'">
+    <!-- Logo Bottom Left -->
+    <img src="logo.png" alt="School Logo" id="school-logo" onerror="this.style.display='none'">
 
     <div class="container">
+        <!-- Lounge Status Section -->
         <div id="status-container">
             <h2 id="lounge-status">Laddar...</h2>
             <p id="lounge-timer"></p>
@@ -114,12 +21,14 @@
 
         <hr id="divider-bar">
 
+        <!-- Lunch Status Dashboard -->
         <div id="lunch-dashboard">
             <div class="lunch-row">
                 <div class="lunch-col">
                     <span class="lunch-label">JUST NU</span>
                     <span id="lunch-now-groups" class="lunch-groups">-</span>
                 </div>
+                <!-- Visual separator -->
                 <div style="border-left: 1px solid #9a9b9d; margin: 0 20px;"></div>
                 <div class="lunch-col">
                     <span class="lunch-label">NÄSTA GRUPP</span>
@@ -129,21 +38,39 @@
             </div>
         </div>
 
+        <!-- Weekly Menu -->
         <div id="menu-container">
             <h1>Veckans Lunchmeny (Vecka <span id="week-number"></span>)</h1>
             <div id="menu-grid">
-                <div class="menu-day" id="menu-monday"><h3>Måndag</h3><pre class="menu-content"></pre></div>
-                <div class="menu-day" id="menu-tuesday"><h3>Tisdag</h3><pre class="menu-content"></pre></div>
-                <div class="menu-day" id="menu-wednesday"><h3>Onsdag</h3><pre class="menu-content"></pre></div>
-                <div class="menu-day" id="menu-thursday"><h3>Torsdag</h3><pre class="menu-content"></pre></div>
-                <div class="menu-day" id="menu-friday"><h3>Fredag</h3><pre class="menu-content"></pre></div>
+                <!-- Day content is dynamically updated via script.js -->
+                <div class="menu-day" id="menu-monday">
+                    <h3>Måndag</h3>
+                    <pre class="menu-content"></pre>
+                </div>
+                <div class="menu-day" id="menu-tuesday">
+                    <h3>Tisdag</h3>
+                    <pre class="menu-content"></pre>
+                </div>
+                <div class="menu-day" id="menu-wednesday">
+                    <h3>Onsdag</h3>
+                    <pre class="menu-content"></pre>
+                </div>
+                <div class="menu-day" id="menu-thursday">
+                    <h3>Torsdag</h3>
+                    <pre class="menu-content"></pre>
+                </div>
+                <div class="menu-day" id="menu-friday">
+                    <h3>Fredag</h3>
+                    <pre class="menu-content"></pre>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Clock Bottom Right -->
     <div id="bottom-right-clock"></div>
 
-    <!-- Updated Script Link -->
-    <script src="script.js?v=44"></script>
+    <!-- Cache Buster: Use ?v=45 -->
+    <script src="script.js?v=45"></script>
 </body>
 </html>
