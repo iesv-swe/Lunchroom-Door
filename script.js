@@ -1,6 +1,5 @@
-// --- v47 TRIM & CLEAN FIX ---
-// Fix: Added .trim() to group names during parsing to remove invisible spaces.
-//      This fixes the issue where "6a" and "6a " were treated as different groups.
+// --- v48 FINAL STABLE ---
+// Style: Menu text is now centered.
 // Logic: Wake Lock API, Filters, Deduplication, Cache Busting.
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -210,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Deduplication: Remove EXACT duplicates
+        // Deduplication
         nowGroups = [...new Set(nowGroups)];
         nextGroups = [...new Set(nextGroups)];
 
