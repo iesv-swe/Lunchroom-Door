@@ -1,182 +1,50 @@
-// --- VERSION 23 ---
-// Fix: "Restore Session" Bar Removal
-// Method: Clean Wake Lock release on shutdown + Infobar hiding
-// Features: Clock, Lunch Dashboard, Menu Status
+// --- v49 AGGRESSIVE FILTERING ---
+// Fix: Enhanced logic to filter out 'support' and 'prao' groups.
+// Layout: Text fits screen, Menu centered.
+// Logic: Wake Lock API, Deduplication, Cache Busting.
 
 document.addEventListener('DOMContentLoaded', () => {
-
-    // --- PART 1: WAKE LOCK & SHUTDOWN HANDLER ---
-    // (Fixes "Restore Session" Bar by ensuring clean exit)
+    
+    // --- PART 1: WAKE LOCK API ---
     let wakeLock = null;
 
-    // Function to request the wake lock
-    async function requestWakeLock() {
+    const requestWakeLock = async () => {
         try {
             if ('wakeLock' in navigator) {
                 wakeLock = await navigator.wakeLock.request('screen');
-                console.log('Wake Lock active');
+                console.log('Wake Lock: ACTIVE');
+                wakeLock.addEventListener('release', () => {
+                    console.log('Wake Lock: RELEASED');
+                    wakeLock = null;
+                });
             }
         } catch (err) {
-            console.error('Wake Lock failed:', err);
+            console.error(`Wake Lock Error: ${err.name}, ${err.message}`);
         }
-    }
+    };
 
-    // Request lock immediately (No 5s delay hack)
+    document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'visible' && wakeLock === null) {
+            await requestWakeLock();
+        }
+    });
+
     requestWakeLock();
 
-    // Re-request lock if window regains focus (failsafe)
-    document.addEventListener('visibilitychange', async () => {
-        if (wakeLock !== null && document.visibilityState === 'visible') {
-            requestWakeLock();
-        }
-    });
-
-    // CLEAN RELEASE: This tells Chrome "we are closing on purpose"
-    window.addEventListener('beforeunload', async () => {
-        if (wakeLock) {
-            await wakeLock.release();
-            wakeLock = null;
-        }
-    });
-
-    // EXPERIMENTAL: Attempt to brute-force hide the infobar if it appears
-    setTimeout(() => {
-        const infobar = document.querySelector('div[id*="infobar"]') || document.querySelector('#restore-pages');
-        if (infobar) infobar.style.display = 'none';
-    }, 1000);
-
-
-    // --- PART 2: CLOCK (Bottom Right) ---
+    // --- PART 2: CLOCK ---
     function updateClock() {
         const now = new Date();
-        const dateString = now.toLocaleDateString('sv-SE', { weekday: 'long', day: 'numeric', month: 'long' });
         const timeString = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-        const formattedDate = dateString.charAt(0).toUpperCase() + dateString.slice(1);
-
-        const timeEl = document.getElementById('clock-time');
-        const dateEl = document.getElementById('clock-date');
-        
-        if (timeEl) timeEl.textContent = timeString;
-        if (dateEl) dateEl.textContent = formattedDate;
+        const clockEl = document.getElementById('bottom-right-clock');
+        if (clockEl) clockEl.textContent = timeString;
     }
     setInterval(updateClock, 1000);
-    updateClock();
+    updateClock(); 
 
-
-    // --- PART 3: LUNCH SCHEDULE PARSER ---
-    let lunchSchedule = {};
-
-    async function loadLessons() {
-        try {
-            const response = await fetch('Lessons.txt');
-            if (!response.ok) throw new Error('Lessons.txt not found');
-            const text = await response.text();
-            parseLessons(text);
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    function parseLessons(text) {
-        const lines = text.split('\n');
-        const dayMap = { 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Thur': 4, 'Fri': 5, 'Sat': 6, 'Sun': 0 };
-        lunchSchedule = { 1: [], 2: [], 3: [], 4: [], 5: [] };
-
-        lines.forEach(line => {
-            const cols = line.split('\t');
-            if (cols.length < 7) return;
-
-            const subject = cols[1];
-            const dayStr = cols[2];
-            const startTimeRaw = cols[3];
-            const lengthRaw = cols[4];
-            const group = cols[6];
-
-            if (subject && subject.toLowerCase().includes('lunch') && dayMap[dayStr]) {
-                const dayNum = dayMap[dayStr];
-                const startMin = timeToMin(startTimeRaw);
-                const endMin = startMin + parseInt(lengthRaw);
-                if (group) {
-                    lunchSchedule[dayNum].push({ group, start: startMin, end: endMin });
-                }
-            }
-        });
-        
-        for (let d in lunchSchedule) {
-            lunchSchedule[d].sort((a, b) => a.start - b.start);
-        }
-        updateLunchDashboard();
-    }
-
-    function timeToMin(timeStr) {
-        const t = parseInt(timeStr);
-        const hours = Math.floor(t / 100);
-        const minutes = t % 100;
-        return hours * 60 + minutes;
-    }
-
-    // --- PART 4: LUNCH DASHBOARD UI ---
-    function updateLunchDashboard() {
-        const now = new Date();
-        const currentDay = now.getDay();
-        const currentHours = now.getHours();
-        const currentMinutes = now.getMinutes();
-        const nowMin = currentHours * 60 + currentMinutes;
-
-        const dashboard = document.getElementById('lunch-dashboard');
-        const nowContainer = document.getElementById('lunch-now-groups');
-        const nextContainer = document.getElementById('lunch-next-groups');
-        const nextTimer = document.getElementById('lunch-next-timer');
-
-        if (!lunchSchedule[currentDay]) {
-            if(dashboard) dashboard.style.display = 'none';
-            return;
-        }
-
-        const todaysLunches = lunchSchedule[currentDay];
-        const nowGroups = [];
-        let nextGroups = [];
-        let nextStartTime = null;
-
-        todaysLunches.forEach(event => {
-            if (nowMin >= event.start && nowMin < event.end) {
-                nowGroups.push(event.group);
-            }
-            if (nowMin < event.start) {
-                if (nextStartTime === null) {
-                    nextStartTime = event.start;
-                    nextGroups.push(event.group);
-                } else if (event.start === nextStartTime) {
-                    nextGroups.push(event.group);
-                }
-            }
-        });
-
-        const timeToNext = nextStartTime ? nextStartTime - nowMin : 9999;
-        const shouldShow = (nowGroups.length > 0) || (timeToNext <= 5);
-
-        if (shouldShow) {
-            dashboard.style.display = 'block';
-            if (nowGroups.length > 0) nowContainer.textContent = nowGroups.join(', ');
-            else nowContainer.textContent = 'Preparing...';
-
-            if (nextGroups.length > 0 && nextStartTime) {
-                nextContainer.textContent = nextGroups.join(', ');
-                nextTimer.textContent = `Starts in ${timeToNext} min`;
-            } else {
-                nextContainer.textContent = '-';
-                nextTimer.textContent = '';
-            }
-        } else {
-            dashboard.style.display = 'none';
-        }
-    }
-    setInterval(updateLunchDashboard, 5000);
-
-
-    // --- PART 5: MAIN STATUS LOGIC ---
+    // --- PART 3: LOUNGE STATUS ---
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
+    
     const schedule = {
         0: [], 1: [[11,0],[13,45]], 2: [[9,0],[10,30],[11,0],[13,45]], 
         3: [[9,0],[13,45]], 4: [[9,0],[10,30],[11,0],[13,45]], 
@@ -186,13 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateLoungeStatus() {
         const now = new Date();
         const currentDay = now.getDay();
-        const currentHours = now.getHours();
-        const currentMinutes = now.getMinutes();
-        const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+        const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
         const daySchedule = schedule[currentDay];
         let isOpen = false;
         let nextEventTime = null;
-
+        
         for (let i = 0; i < daySchedule.length; i += 2) {
             const openTime = daySchedule[i][0] * 60 + daySchedule[i][1];
             const closeTime = daySchedule[i + 1][0] * 60 + daySchedule[i + 1][1];
@@ -227,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 nextEventTime.setHours(nextOpenTime[0], nextOpenTime[1], 0, 0);
             }
         }
-
+        
         if (isOpen) {
             statusElement.textContent = 'The Lounge is OPEN';
             statusElement.className = 'open';
@@ -242,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
+    
     function formatCountdown(targetTime) {
         const now = new Date();
         const diff = targetTime.getTime() - now.getTime();
@@ -257,31 +123,147 @@ document.addEventListener('DOMContentLoaded', () => {
             return `${String(minutes).padStart(2, '0')}M:${String(seconds).padStart(2, '0')}S`;
         }
     }
+    updateLoungeStatus();
+    setInterval(updateLoungeStatus, 1000);
 
-    // --- PART 6: MENU ---
+    // --- PART 4: LUNCH DASHBOARD ---
+    async function safeLoadLessons() {
+        try {
+            const cb = Date.now();
+            const response = await fetch(`Lessons.txt?t=${cb}`);
+            
+            if (!response.ok) throw new Error('Lessons.txt not found');
+            const text = await response.text();
+            parseLessons(text);
+        } catch (error) {
+            console.warn('Lesson load failed:', error);
+            const dashboard = document.getElementById('lunch-dashboard');
+            if(dashboard) dashboard.style.display = 'none';
+        }
+    }
+
+    let lunchSchedule = {};
+    function parseLessons(text) {
+        const lines = text.split('\n');
+        const dayMap = { 'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thur': 4, 'Fri': 5, 'Sat': 6, 'Sun': 0 };
+        lunchSchedule = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+
+        lines.forEach(line => {
+            const cols = line.split('\t');
+            if (cols.length < 7) return;
+            const subject = cols[1];
+            const dayStr = cols[2];
+            const startTimeRaw = cols[3];
+            const lengthRaw = cols[4];
+            
+            // TRIM FIX
+            const group = cols[6] ? cols[6].trim() : '';
+
+            if (subject && subject.includes('Lunch') && dayMap[dayStr] >= 1 && dayMap[dayStr] <= 5) {
+                const dayNum = dayMap[dayStr];
+                const startMin = timeToMin(startTimeRaw);
+                const endMin = startMin + parseInt(lengthRaw);
+                
+                // --- V49: AGGRESSIVE FILTERING ---
+                const lowerGroup = group.toLowerCase();
+                const isExcluded = lowerGroup.includes('support') || lowerGroup.includes('prao');
+
+                if (group && !isExcluded) { 
+                    lunchSchedule[dayNum].push({ group: group, start: startMin, end: endMin });
+                }
+            }
+        });
+        for (let d in lunchSchedule) lunchSchedule[d].sort((a, b) => a.start - b.start);
+        updateLunchDashboard();
+    }
+
+    function timeToMin(timeStr) {
+        const t = parseInt(timeStr);
+        return Math.floor(t / 100) * 60 + (t % 100);
+    }
+
+    function updateLunchDashboard() {
+        const now = new Date();
+        const currentDay = now.getDay();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const dashboard = document.getElementById('lunch-dashboard');
+        const divider = document.getElementById('divider-bar'); 
+
+        if (!lunchSchedule[currentDay]) { 
+            if(dashboard) dashboard.style.display = 'none'; 
+            if(divider) divider.style.display = 'none';
+            return; 
+        }
+
+        const todaysLunches = lunchSchedule[currentDay];
+        let nowGroups = [];
+        let nextGroups = [];
+        let nextStartTime = null;
+
+        todaysLunches.forEach(event => {
+            if (nowMin >= event.start && nowMin < event.end) nowGroups.push(event.group);
+            if (nowMin < event.start) {
+                if (nextStartTime === null || event.start === nextStartTime) {
+                    nextStartTime = event.start;
+                    nextGroups.push(event.group);
+                }
+            }
+        });
+
+        // Deduplication
+        nowGroups = [...new Set(nowGroups)];
+        nextGroups = [...new Set(nextGroups)];
+
+        const nowGroupSet = new Set(nowGroups);
+        const filteredNextGroups = nextGroups.filter(group => !nowGroupSet.has(group));
+        const timeToNext = nextStartTime ? nextStartTime - nowMin : 9999;
+        const shouldShow = (nowGroups.length > 0) || (timeToNext <= 5);
+
+        if (shouldShow && dashboard) {
+            dashboard.style.display = 'block';
+            if(divider) divider.style.display = 'block'; 
+            
+            document.getElementById('lunch-now-groups').textContent = nowGroups.length > 0 ? nowGroups.join(', ') : 'Förbereder...';
+            
+            if (filteredNextGroups.length > 0 && nextStartTime) { 
+                document.getElementById('lunch-next-groups').textContent = filteredNextGroups.join(', ');
+                document.getElementById('lunch-next-timer').textContent = `Startar om ${timeToNext} min`;
+            } else {
+                document.getElementById('lunch-next-groups').textContent = '-';
+                document.getElementById('lunch-next-timer').textContent = '';
+            }
+        } else if (dashboard) {
+            dashboard.style.display = 'none';
+            if(divider) divider.style.display = 'none'; 
+        }
+    }
+    setInterval(updateLunchDashboard, 5000);
+
+    // --- PART 5: MENU ---
     function getWeekNumber(d) {
         d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
         d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-        var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-        var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-        return weekNo;
+        var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)); 
+        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     }
-    async function loadMenu() {
-        const today = new Date();
-        const currentWeek = getWeekNumber(today);
-        const currentDayIndex = today.getDay();
-        const weekEl = document.getElementById('week-number');
-        if(weekEl) weekEl.textContent = currentWeek;
-        
+
+    async function safeLoadMenu() {
+        const cb = Date.now();
+        const currentWeek = getWeekNumber(new Date());
+        document.getElementById('week-number').textContent = currentWeek;
+
         try {
-            const response = await fetch('menu.txt');
-            if (!response.ok) throw new Error('menu.txt file not found.');
+            const response = await fetch(`menu.txt?t=${cb}`);
+            if (!response.ok) throw new Error('menu.txt not found');
             const text = await response.text();
-            parseMenu(text, currentWeek, currentDayIndex);
+            parseMenu(text, currentWeek, new Date().getDay());
         } catch (error) {
-            console.error(error);
+            console.warn('Menu load failed:', error);
+            document.getElementById('menu-grid').innerHTML = 
+                `<p style="color:white; font-size:2em;">❌ Meny kunde inte laddas.<br><span style="font-size:0.6em; color:#aaa;">Söker efter: [WEEK ${currentWeek}] i menu.txt</span></p>`;
         }
     }
+
     function parseMenu(text, currentWeek, currentDayIndex) {
         const lines = text.split('\n');
         let activeWeek = false;
@@ -289,32 +271,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const weekTag = `[WEEK ${currentWeek}]`;
         const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
         const menuData = { MONDAY: '', TUESDAY: '', WEDNESDAY: '', THURSDAY: '', FRIDAY: '' };
+        
         for (const line of lines) {
             const trimmedLine = line.trim();
-            if (trimmedLine.startsWith('[WEEK')) {
+            if (trimmedLine.toUpperCase().startsWith('[WEEK')) {
                 activeWeek = (trimmedLine.toUpperCase() === weekTag);
             } else if (activeWeek && trimmedLine.startsWith('[')) {
                 activeDay = trimmedLine.substring(1, trimmedLine.length - 1).toUpperCase();
-            } else if (activeWeek && activeDay && menuData.hasOwnProperty(activeDay) && trimmedLine) {
+            } else if (activeWeek && activeDay && menuData.hasOwnProperty(activeDay) && trimmedLine && !trimmedLine.startsWith('#')) {
                 menuData[activeDay] += trimmedLine + '\n';
             }
         }
-        const mEl = document.querySelector('#menu-monday .menu-content');
-        if(mEl) mEl.textContent = menuData.MONDAY || 'Meny saknas';
+        
+        document.querySelector('#menu-monday .menu-content').textContent = menuData.MONDAY || 'Meny saknas';
         document.querySelector('#menu-tuesday .menu-content').textContent = menuData.TUESDAY || 'Meny saknas';
         document.querySelector('#menu-wednesday .menu-content').textContent = menuData.WEDNESDAY || 'Meny saknas';
         document.querySelector('#menu-thursday .menu-content').textContent = menuData.THURSDAY || 'Meny saknas';
         document.querySelector('#menu-friday .menu-content').textContent = menuData.FRIDAY || 'Meny saknas';
+        
         if (currentDayIndex >= 1 && currentDayIndex <= 5) {
             const todayKey = days[currentDayIndex].toLowerCase();
-            const todayElement = document.getElementById(`menu-${todayKey}`);
-            if (todayElement) todayElement.classList.add('today');
+            const el = document.getElementById(`menu-${todayKey}`);
+            if (el) el.classList.add('today');
         }
     }
 
-    // INIT
-    loadLessons();
-    loadMenu();
-    updateLoungeStatus();
-    setInterval(updateLoungeStatus, 1000);
+    safeLoadLessons();
+    safeLoadMenu();
 });
