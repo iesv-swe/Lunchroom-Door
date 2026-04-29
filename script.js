@@ -302,4 +302,31 @@ const schedule = {
 
     safeLoadLessons();
     safeLoadMenu();
+
+
+
+
+
+// Add a debug info area somewhere on the page:
+window.addEventListener('DOMContentLoaded', () => {
+    let debugBox = document.createElement('div');
+    debugBox.id = 'debug-date-time';
+    debugBox.style.cssText = 'position:fixed;bottom:0;left:0;background:#222;color:#cff;padding:6px;font-size:1.1em;z-index:9999;border-radius:4px;';
+    document.body.appendChild(debugBox);
+
+    function updateDebug() {
+        const now = new Date();
+        debugBox.textContent =
+            'Device time: ' + now.toString() +
+            ' | .getDay(): ' + now.getDay();
+    }
+    setInterval(updateDebug, 5000);
+    updateDebug();
+});
+
+
+
+
+
+    
 });
