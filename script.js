@@ -47,11 +47,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
 const schedule = {
     0: [], // Sunday
-    1: [], // Monday
-    2: [], // Tuesday
-    3: [], // Wednesday: open 09:00–10:30 only
-    4: [], // Thursday: closed all day
-    5: [], // Friday
+    1: [[11,10],[13,15]], // Monday
+    2: [[9,0],[10,30],[11,10],[13,15]], // Tuesday
+    3: [[9,0],[10,30]],   // Wednesday: open 09:00–10:30 only
+    4: [],                // Thursday: closed all day
+    5: [[9,0],[10,30],[11,10],[13,15]], // Friday
     6: [] // Saturday
 };
 
