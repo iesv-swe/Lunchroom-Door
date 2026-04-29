@@ -45,11 +45,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
     
-    const schedule = {
-        0: [], 1: [[11,10],[13,15]], 2: [[9,0],[10,30],[11,10],[13,15]], 
-        3: [[9,0],[10,30],[11,10],[13,15]], 4: [[9,0],[10,30],[11,10],[13,15]], 
-        5: [[9,0],[10,30],[11,10],[13,15]], 6: []
-    };
+const schedule = {
+    0: [], // Sunday
+    1: [[11,10],[13,15]], // Monday
+    2: [[9,0],[10,30],[11,10],[13,15]], // Tuesday
+    3: [[9,0],[10,30]],   // Wednesday: open 09:00–10:30 only
+    4: [],                // Thursday: closed all day
+    5: [[9,0],[10,30],[11,10],[13,15]], // Friday
+    6: [] // Saturday
+};
 
     function updateLoungeStatus() {
         const now = new Date();
