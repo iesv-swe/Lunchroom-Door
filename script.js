@@ -44,11 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- PART 3: LOUNGE STATUS ---
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
-    
+
+      //  ---- 1 = Monday [[10,00],[11,00]]  < format
     const schedule = {
-        0: [], 1: [[11,10],[13,15]], 2: [[9,0],[10,30],[11,10],[13,15]], 
-        3: [[9,0],[10,30],[11,10],[13,15]], 4: [[9,0],[10,30],[11,10],[13,15]], 
-        5: [[9,0],[10,30],[11,10],[13,15]], 6: []
+        0: [], 1: [], 2: [], 
+        3: [], 4: [], 
+        5: [], 6: []
     };
 
     function updateLoungeStatus() {
