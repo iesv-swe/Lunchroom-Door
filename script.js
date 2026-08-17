@@ -1,6 +1,6 @@
-// --- v49 AGGRESSIVE FILTERING ---
-// Fix: Enhanced logic to filter out 'support' and 'prao' groups.
-// Layout: Text fits screen, Menu centered.
+// --- v50 SCHEDULE FIX ---
+// Fix: Restored PART 3 header (updateClock closure + status element refs).
+// Schedule: Mon-Thu 09:00-11:00 / 11:30-13:00, Fri 09:45-11:00 / 11:30-13:00.
 // Logic: Wake Lock API, Deduplication, Cache Busting.
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -37,18 +37,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const timeString = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
         const clockEl = document.getElementById('bottom-right-clock');
         if (clockEl) clockEl.textContent = timeString;
-const schedule = {
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // --- PART 3: LOUNGE STATUS ---
+    const statusElement = document.getElementById('lounge-status');
+    const timerElement = document.getElementById('lounge-timer');
+    //  ---- 1 = Monday, pairs of [open, close]
+    const schedule = {
         0: [],
         1: [[9,0],[11,0],[11,30],[13,0]],
         2: [[9,0],[11,0],[11,30],[13,0]],
-        3: [[9,0],[10,30],[11,30],[13,0]],
+        3: [[9,0],[11,0],[11,30],[13,0]],
         4: [[9,0],[11,0],[11,30],[13,0]],
-        5: [[9,0],[11,0],[11,30],[13,0]],
+        5: [[9,45],[11,0],[11,30],[13,0]],
         6: []
     };
-    console.log('SCHEDULE VERSION TEST-1', new Date().getDay(), schedule[new Date().getDay()]);
 
-        
     function updateLoungeStatus() {
         const now = new Date();
         const currentDay = now.getDay();
@@ -297,6 +303,4 @@ const schedule = {
     safeLoadLessons();
     safeLoadMenu();
 
-
-    
 });
