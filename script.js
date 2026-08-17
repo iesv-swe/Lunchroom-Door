@@ -46,13 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const timerElement = document.getElementById('lounge-timer');
       //  ---- 1 = Monday [[10,0],[11,0]]  < format
     const schedule = {
-        0: [],                                        // Sunday
-        1: [[[9,0],[11,0]], [[11,30],[13,0]]],        // Monday
-        2: [[[9,0],[11,0]], [[11,30],[13,0]]],        // Tuesday
-        3: [[[9,0],[10,30]], [[11,30],[13,0]]],       // Wednesday
-        4: [[[9,0],[11,0]], [[11,30],[13,0]]],        // Thursday
-        5: [[[9,0],[11,0]], [[11,30],[13,0]]],        // Friday
-        6: []                                         // Saturday
+        0: [],                                                  // Sunday
+        1: [[9,0],[11,0], [11,30],[13,0]],                      // Monday
+        2: [[9,0],[11,0], [11,30],[13,0]],                      // Tuesday
+        3: [[9,0],[10,30], [11,30],[13,0]],                     // Wednesday
+        4: [[9,0],[11,0], [11,30],[13,0]],                      // Thursday
+        5: [[9,0],[11,0], [11,30],[13,0]],                      // Friday
+        6: []                                                   // Saturday
     };
     function updateLoungeStatus() {
         const now = new Date();
