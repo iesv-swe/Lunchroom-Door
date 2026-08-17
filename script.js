@@ -37,15 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const timeString = now.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
         const clockEl = document.getElementById('bottom-right-clock');
         if (clockEl) clockEl.textContent = timeString;
-    }
-    setInterval(updateClock, 1000);
-    updateClock(); 
-
-    // --- PART 3: LOUNGE STATUS ---
-    const statusElement = document.getElementById('lounge-status');
-    const timerElement = document.getElementById('lounge-timer');
-      //  ---- 1 = Monday [[10,0],[11,0]]  < format
-    const schedule = {
+const schedule = {
         0: [],
         1: [[9,0],[11,0],[11,30],[13,0]],
         2: [[9,0],[11,0],[11,30],[13,0]],
@@ -54,6 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
         5: [[9,0],[11,0],[11,30],[13,0]],
         6: []
     };
+    console.log('SCHEDULE VERSION TEST-1', new Date().getDay(), schedule[new Date().getDay()]);
+
+        
     function updateLoungeStatus() {
         const now = new Date();
         const currentDay = now.getDay();
