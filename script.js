@@ -41,17 +41,17 @@ document.addEventListener('DOMContentLoaded', () => {
     updateClock();
     setInterval(updateClock, 1000);
 
-    // --- PART 3: LOUNGE STATUS ---
+// --- PART 3: LOUNGE STATUS ---
     const statusElement = document.getElementById('lounge-status');
     const timerElement = document.getElementById('lounge-timer');
-    //  ---- 1 = Monday, pairs of [open, close]
+    //  ---- 1 = Monday, pairs of [open, close] — list sessions in order: open, close, open, close
     const schedule = {
         0: [],
-        1: [[9,0],[13,0]],
-        2: [[9,0],[13,0]],
-        3: [[9,0],[13,0]],
-        4: [[9,0],[13,0]],
-        5: [[9,45],[13,0]],
+        1: [[9,0],[10,30],[11,15],[13,0]],
+        2: [[9,0],[10,30],[11,15],[13,0]],
+        3: [[9,0],[10,30],[11,15],[13,0]],
+        4: [[9,0],[10,30],[11,15],[13,0]],
+        5: [[9,30],[10,30],[11,15],[13,0]],
         6: []
     };
 
